@@ -513,7 +513,7 @@ export function SavingsExperience({
                       />
                     }
                   >
-                    <ItemMedia variant="image" className="size-10 self-center translate-y-0 rounded-full bg-muted text-xs font-semibold">
+                    <ItemMedia variant="image" aria-hidden="true" className="size-10 self-center translate-y-0 rounded-full bg-muted text-xs font-semibold">
                       {vaultInitials(candidate.name)}
                     </ItemMedia>
                     <ItemContent className="min-w-0">

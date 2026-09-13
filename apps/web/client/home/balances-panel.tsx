@@ -191,17 +191,8 @@ function IncrementalBalancesList({
       },
       { root, rootMargin: "0px 0px 60% 0px" },
     );
-    const revealAfterScroll = () => {
-      if (root && root.scrollTop > 0) onRevealMore();
-    };
-    if (revealedCount <= BALANCES_BATCH_SIZE) {
-      root?.addEventListener("scroll", revealAfterScroll, { passive: true, once: true });
-    }
     observer.observe(sentinel);
-    return () => {
-      root?.removeEventListener("scroll", revealAfterScroll);
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [active, revealedCount, items.length, hasMore, onRevealMore]);
 
   if (items.length === 0) {

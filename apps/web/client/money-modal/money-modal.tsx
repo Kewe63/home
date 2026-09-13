@@ -61,7 +61,7 @@ export function MoneyModalHeader({ title, titleId, onBack, onClose, closeDisable
 
 export function MoneyModalBody({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`flex min-h-0 flex-1 flex-col overflow-auto px-4 pb-4 ${className}`.trim()}>
+    <div className={`flex min-h-0 flex-1 flex-col overflow-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] ${className}`.trim()}>
       {children}
     </div>
   );
