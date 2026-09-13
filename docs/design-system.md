@@ -6,11 +6,11 @@ Home is a shadcn app using the Base UI preset. The migration history and owner d
 
 Owned component copies live in `apps/web/components/ui`. Product code composes those wrappers instead of importing Base UI primitives directly.
 
-Add a component from the repository root:
+Add a component (uses the pinned `shadcn` CLI in `apps/web`):
 
 ```sh
 cd apps/web
-npx shadcn add <name>
+bunx shadcn add <name>
 ```
 
 Review every generated copy before committing it. Replace generated colour, radius, and size literals with the semantic tokens below.
@@ -22,7 +22,7 @@ Review every generated copy before committing it. Replace generated colour, radi
 - `--primary` is Base blue (`#0052ff`); `--background`, `--card`, and `--popover` are white.
 - `--foreground` is Home ink; `--muted` is canvas; `--muted-foreground` is secondary text; `--border` and `--input` are hairlines.
 - `--destructive`, `--success`, `--warning`, `--market-gain`, and `--market-loss` carry semantic status values.
-- Home-only values use `--home-*`, including status-palette details, motion, and country-select hooks. Region presentation continues through `--region-*` values supplied by the shell.
+- Home-only values use `--home-*`, including status-palette details, motion, and country-select hooks. The shell still sets `--region-accent`, `--region-accent-soft`, and `--region-surface` inline for region theming; nothing consumes them today, so wire them to `--primary`/`--muted` when a region-tinted surface is wanted.
 - Type roles are Tailwind `--text-*` tokens: amount, page title, sheet title, section title, row label/value, body, field, control, caption, and metadata.
 - Controls use the 6px `--radius`; ordinary surfaces use `rounded-xl` (12px).
 - DM Sans and DM Mono are local fonts owned by `apps/web/app/fonts` and exposed as `--font-sans` and `--font-mono`.
@@ -31,7 +31,7 @@ Review every generated copy before committing it. Replace generated colour, radi
 
 1. Style components and product surfaces with Tailwind utilities. Colour, radius, and size literals in utility strings are banned; ESLint enforces semantic tokens.
 2. Raw `@base-ui/react` imports are allowed only in `apps/web/components/ui`.
-3. Raw `button`, `input`, and `select` elements outside `components/ui` are banned except for the shrinking audited allowlist. Use the owned wrappers. Raw dialog and divider elements are also guarded.
+3. Raw `button`, `input`, and `select` elements outside `components/ui` are banned except for the shrinking audited allowlist. Use the owned wrappers.
 
 ## Home-owned product pieces
 
