@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -14,9 +15,12 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
+  ItemGroup,
+  ItemSeparator,
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft } from "lucide-react";
 import { MoneyTicker } from "@/components/money-ticker";
 import { CopyableValue } from "@/components/copyable-value";
 import { useOptionalAppChrome } from "@/components/app-chrome";
@@ -41,17 +45,17 @@ import {
   BASE_USDC_DECIMALS,
   MORPHO_V1_CANDIDATE_ADDRESSES,
 } from "@/shared/savings/config";
-import type { MorphoVaultCandidate, MorphoVaultsResult } from "@/shared/savings/types";
+import type {
+  MorphoVaultCandidate,
+  MorphoVaultsResult,
+} from "@/shared/savings/types";
 import { parseVaultsResult } from "@/shared/savings/contracts/vaults";
 import {
   isUsablePositionResult,
   parsePositionResult,
   type SavingsPositionsResult,
 } from "@/shared/savings/contracts/positions";
-import {
-  readUsdcBaseUnits,
-  shortVaultLabel,
-} from "./format";
+import { readUsdcBaseUnits, shortVaultLabel } from "./format";
 import {
   formatExactSavingsApy,
   getSavingsRateState,
@@ -59,7 +63,6 @@ import {
   summarizeSavingsPortfolio,
   type SavingsApySummary,
 } from "./portfolio-summary";
-import styles from "./savings-experience.module.css";
 import {
   ownerQueryKey,
   ownerQueryMeta,
@@ -350,27 +353,26 @@ export function SavingsExperience({
 
   return (
     <section
-      className={styles.experience}
+      className="mx-auto w-full max-w-xl space-y-6"
       aria-label={hosted ? "Save" : undefined}
       aria-labelledby={hosted ? undefined : "savings-title"}
     >
       {hosted ? null : (
-        <header className={styles.header}>
+        <header className="grid grid-cols-[2rem_1fr_2rem] items-center gap-2">
           {onBack ? (
             <Button
-              className={styles.back}
               variant="ghost"
               size="icon"
               onClick={onBack}
               aria-label="Back"
             >
-              <span aria-hidden="true">←</span>
+              <ArrowLeft className="size-4" aria-hidden="true" />
             </Button>
           ) : (
             <span />
           )}
           <h2
-            className={`${styles.title} text-sheet-title font-semibold`}
+            className="text-center text-2xl font-semibold tracking-tight"
             id="savings-title"
           >
             Save
@@ -379,41 +381,62 @@ export function SavingsExperience({
         </header>
       )}
 
-      <div
-        className={`${styles.hero} flex flex-col gap-2`}
-        aria-busy={coldLoading || refreshing || undefined}
-      >
-        {coldLoading ? (
-          <>
-            <Skeleton
-              className="h-14 w-2/5 max-w-44"
-              data-shimmer="savings-hero"
-            />
-            <SavingsNotice visuallyHidden>Updating…</SavingsNotice>
-          </>
-        ) : availableBalance ? (
-          <>
-            <p
-              className={`${styles.heroAmount} text-amount tabular-nums ${funded ? "" : styles.heroAmountEmpty}`.trim()}
-            >
-              <MoneyTicker
-                value={formatUsdStablecoinAmount(
-                  availableBalance.totalBaseUnits,
-                )}
+      <Card aria-busy={coldLoading || refreshing || undefined}>
+        <CardContent className="flex flex-col items-center gap-2 text-center">
+          {coldLoading ? (
+            <>
+              <Skeleton
+                className="h-12 w-2/5 max-w-44"
+                data-shimmer="savings-hero"
               />
-            </p>
-            {funded && portfolioSummary ? (
-              loadState.status === "loading" ? (
-                <>
-                  <Skeleton className="h-4 w-28" data-shimmer="savings-apy" />
-                  <SavingsNotice visuallyHidden>Loading APY…</SavingsNotice>
-                </>
+              <SavingsNotice visuallyHidden>Updating…</SavingsNotice>
+            </>
+          ) : availableBalance ? (
+            <>
+              <p
+                className={`text-4xl font-semibold tracking-tight tabular-nums ${funded ? "" : "text-muted-foreground"}`.trim()}
+              >
+                <MoneyTicker
+                  value={formatUsdStablecoinAmount(
+                    availableBalance.totalBaseUnits,
+                  )}
+                />
+              </p>
+              {funded && portfolioSummary ? (
+                loadState.status === "loading" ? (
+                  <>
+                    <Skeleton className="h-4 w-28" data-shimmer="savings-apy" />
+                    <SavingsNotice visuallyHidden>Loading APY…</SavingsNotice>
+                  </>
+                ) : (
+                  <FundedApyCaption apy={portfolioSummary.apy} />
+                )
               ) : (
-                <FundedApyCaption apy={portfolioSummary.apy} />
-              )
-            ) : (
+                <SavingsEmpty
+                  title="Nothing saved yet"
+                  description={
+                    selected && loadState.status === "ready"
+                      ? `Available vault · ${shortVaultLabel(selected.name)} · ${availableVaultApyLabel(selected, loadState.data, rateNowMs)}`
+                      : undefined
+                  }
+                />
+              )}
+              {refreshing ? (
+                <p className="text-xs text-muted-foreground" role="status">
+                  Refreshing…
+                </p>
+              ) : refreshError ? (
+                <p className="text-xs text-muted-foreground" role="status">
+                  Refresh unavailable
+                </p>
+              ) : null}
+            </>
+          ) : !sessionKey ? (
+            <>
+              <p className="text-4xl font-semibold tracking-tight text-muted-foreground tabular-nums">
+                <MoneyTicker value="$0.00" />
+              </p>
               <SavingsEmpty
-                className={styles.heroEmpty}
                 title="Nothing saved yet"
                 description={
                   selected && loadState.status === "ready"
@@ -421,57 +444,22 @@ export function SavingsExperience({
                     : undefined
                 }
               />
-            )}
-            {refreshing ? (
-              <p
-                className={`${styles.heroMeta} text-metadata text-muted-foreground`}
-                role="status"
-              >
-                Refreshing…
+            </>
+          ) : (
+            <>
+              <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                <MoneyTicker value="—" />
               </p>
-            ) : refreshError ? (
-              <p
-                className={`${styles.heroMeta} text-metadata text-muted-foreground`}
-                role="status"
-              >
-                Refresh unavailable
+              <p className="text-sm text-muted-foreground" role="status">
+                Balance unavailable
               </p>
-            ) : null}
-          </>
-        ) : !sessionKey ? (
-          <>
-            <p
-              className={`${styles.heroAmount} ${styles.heroAmountEmpty} text-amount tabular-nums`}
-            >
-              <MoneyTicker value="$0.00" />
-            </p>
-            <SavingsEmpty
-              className={styles.heroEmpty}
-              title="Nothing saved yet"
-              description={
-                selected && loadState.status === "ready"
-                  ? `Available vault · ${shortVaultLabel(selected.name)} · ${availableVaultApyLabel(selected, loadState.data, rateNowMs)}`
-                  : undefined
-              }
-            />
-          </>
-        ) : (
-          <>
-            <p className={`${styles.heroAmount} text-amount tabular-nums`}>
-              <MoneyTicker value="—" />
-            </p>
-            <p
-              className={`${styles.heroCaption} text-caption text-muted-foreground`}
-              role="status"
-            >
-              Balance unavailable
-            </p>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {loadState.status === "loading" ? (
-        <section className={styles.vaults} aria-label="Vaults" aria-busy="true">
+        <section className="space-y-3" aria-label="Vaults" aria-busy="true">
           <VaultListSkeleton />
           <SavingsNotice visuallyHidden>Loading vaults…</SavingsNotice>
         </section>
@@ -480,12 +468,8 @@ export function SavingsExperience({
           Vaults are temporarily unavailable.
         </SavingsNotice>
       ) : !coldLoading && !positionFailed && candidates.length > 0 ? (
-        <section className={styles.vaults} aria-label="Vaults">
-          <div
-            className={`${styles.vaultList} flex flex-col gap-2.5`}
-            role="radiogroup"
-            aria-label="Vault"
-          >
+        <section className="space-y-3" aria-label="Vaults">
+          <ItemGroup role="radiogroup" aria-label="Vault">
             {candidates.map((candidate) => {
               const isSelected =
                 selected?.vaultAddress === candidate.vaultAddress;
@@ -508,84 +492,82 @@ export function SavingsExperience({
                 "APY unavailable"
               );
               return (
-                <ul
-                  key={candidate.vaultAddress}
-                  className={`${styles.vault} surface-primary ${isSelected ? styles.vaultSelected : ""}`.trim()}
-                >
-                  <li>
-                    <Item
-                      className={`${styles.vaultRow} min-h-16 flex-nowrap rounded-none border-0 px-4 py-3.5 text-left`}
-                      render={
-                        <Button
-                          variant="ghost"
-                          type="button"
-                          onClick={() =>
-                            setSelectedAddress(candidate.vaultAddress)
-                          }
-                          role="radio"
-                          aria-checked={isSelected}
-                          name="savings-vault"
-                        />
-                      }
-                    >
-                      <ItemContent className="min-w-0">
-                        <ItemTitle className="text-row-label">
-                          {candidate.name}
-                        </ItemTitle>
-                        {funded && loadState.status === "ready" ? (
-                          <ItemDescription className="text-caption">
-                            {fundedVaultApyLabel(
-                              candidate,
-                              loadState.data,
-                              rateNowMs,
-                            )}
-                          </ItemDescription>
-                        ) : null}
-                      </ItemContent>
-                      <ItemActions className="text-row-value justify-end text-right tabular-nums">
-                        {rowValue}
-                      </ItemActions>
-                    </Item>
-                  </li>
-                  {isSelected ? (
-                    <li className={styles.detailsBody}>
-                      <dl className={styles.detailsFacts}>
-                        <div className={styles.detailsFact}>
-                          <dt>Fee</dt>
-                          <dd>
-                            {formatPresentationPercentage(selected.feeRate)}
-                          </dd>
-                        </div>
-                        <div className={styles.detailsFact}>
-                          <dt>Curator</dt>
-                          <dd>
-                            {selected.curatorAddress ? (
-                              <CopyableValue
-                                value={selected.curatorAddress}
-                                display={formatAddress(selected.curatorAddress)}
-                                valueKind="address"
-                              />
-                            ) : (
-                              "—"
-                            )}
-                          </dd>
-                        </div>
-                      </dl>
-                    </li>
-                  ) : null}
-                </ul>
+                <Fragment key={candidate.vaultAddress}>
+                  <Item
+                    variant={isSelected ? "muted" : "outline"}
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="lg"
+                        type="button"
+                        onClick={() =>
+                          setSelectedAddress(candidate.vaultAddress)
+                        }
+                        role="radio"
+                        aria-checked={isSelected}
+                        name="savings-vault"
+                      />
+                    }
+                  >
+                    <ItemContent className="min-w-0">
+                      <ItemTitle>{candidate.name}</ItemTitle>
+                      {funded && loadState.status === "ready" ? (
+                        <ItemDescription>
+                          {fundedVaultApyLabel(
+                            candidate,
+                            loadState.data,
+                            rateNowMs,
+                          )}
+                        </ItemDescription>
+                      ) : null}
+                    </ItemContent>
+                    <ItemActions className="justify-end text-right text-sm tabular-nums">
+                      {rowValue}
+                    </ItemActions>
+                  </Item>
+                  {candidate !== candidates.at(-1) ? <ItemSeparator /> : null}
+                </Fragment>
               );
             })}
-          </div>
+          </ItemGroup>
+          {selected ? (
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle>{selected.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-sm text-muted-foreground">Fee</dt>
+                    <dd className="text-sm tabular-nums">
+                      {formatPresentationPercentage(selected.feeRate)}
+                    </dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="text-sm text-muted-foreground">Curator</dt>
+                    <dd className="min-w-0 text-right text-sm">
+                      {selected.curatorAddress ? (
+                        <CopyableValue
+                          value={selected.curatorAddress}
+                          display={formatAddress(selected.curatorAddress)}
+                          valueKind="address"
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+          ) : null}
         </section>
       ) : null}
 
       {loadState.status !== "error" && (availableBalance || !sessionKey) ? (
-        <div
-          className={`${styles.actions} ${funded ? styles.actionsSplit : ""}`.trim()}
-        >
+        <div className={`grid gap-2 ${funded ? "grid-cols-2" : "grid-cols-1"}`}>
           <Button
-            className={styles.action}
+            size="lg"
             disabled={!actionsReady}
             onClick={() => openAction("deposit")}
           >
@@ -593,7 +575,7 @@ export function SavingsExperience({
           </Button>
           {funded ? (
             <Button
-              className={styles.action}
+              size="lg"
               variant="secondary"
               disabled={!actionsReady || !canWithdraw}
               onClick={() => openAction("withdraw")}
@@ -666,36 +648,27 @@ function fundedVaultApyLabel(
 function FundedApyCaption({ apy }: { apy: SavingsApySummary }) {
   if (apy.status === "available") {
     return (
-      <p className={`${styles.heroCaption} text-caption text-muted-foreground`}>
+      <p className="text-sm text-muted-foreground">
         Earning ~{formatExactSavingsApy(apy.value)}
       </p>
     );
   }
   if (apy.status === "partial") {
     return (
-      <p
-        className={`${styles.heroCaption} text-caption text-muted-foreground`}
-        role="status"
-      >
+      <p className="text-sm text-muted-foreground" role="status">
         APY partially unavailable
       </p>
     );
   }
   if (apy.status === "stale") {
     return (
-      <p
-        className={`${styles.heroCaption} text-caption text-muted-foreground`}
-        role="status"
-      >
+      <p className="text-sm text-muted-foreground" role="status">
         APY data stale
       </p>
     );
   }
   return (
-    <p
-      className={`${styles.heroCaption} text-caption text-muted-foreground`}
-      role="status"
-    >
+    <p className="text-sm text-muted-foreground" role="status">
       APY unavailable
     </p>
   );
@@ -748,18 +721,16 @@ function SavingsNotice({
 
 function VaultListSkeleton() {
   return (
-    <ul className={styles.vaultSkeletonList} aria-hidden="true">
+    <div className="space-y-3" aria-hidden="true">
       {[0, 1].map((index) => (
-        <li
-          key={index}
-          className={styles.vaultSkeleton}
-          data-shimmer="vault-row"
-        >
-          <Skeleton className={`${styles.vaultSkeletonName} h-4`} />
-          <Skeleton className={`${styles.vaultSkeletonValue} h-4`} />
-        </li>
+        <Card key={index} size="sm" data-shimmer="vault-row">
+          <CardContent className="flex items-center justify-between gap-3">
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="h-4 w-14" />
+          </CardContent>
+        </Card>
       ))}
-    </ul>
+    </div>
   );
 }
 

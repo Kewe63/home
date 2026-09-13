@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MoneyTicker } from "@/components/money-ticker";
 import { CopyableValue } from "@/components/copyable-value";
 import {
@@ -24,11 +28,22 @@ import {
   type MoneyAmountChangeSource,
 } from "@/client/money-modal";
 import modal from "@/client/money-modal/money-modal.module.css";
-import styles from "./add-money.module.css";
-import { ownerQueryKey, ownerQueryMeta, publicQueryKey, useHomeQuery } from "@/client/query/query-client";
+import {
+  ownerQueryKey,
+  ownerQueryMeta,
+  publicQueryKey,
+  useHomeQuery,
+} from "@/client/query/query-client";
 import type { FundingBinding } from "@/shared/funding/contracts/providers";
-import { readQuoteDraft, type QuoteDraft } from "@/shared/funding/contracts/quotes";
-import { readFundingOrder, type FundingOrderSummary, type Instruction } from "@/shared/funding/contracts/order";
+import {
+  readQuoteDraft,
+  type QuoteDraft,
+} from "@/shared/funding/contracts/quotes";
+import {
+  readFundingOrder,
+  type FundingOrderSummary,
+  type Instruction,
+} from "@/shared/funding/contracts/order";
 
 type AccountFetch = (
   path: string,
@@ -208,27 +223,37 @@ export function FundingOrderFlow({
   );
   return (
     <>
-      <div
-        className={`${modal.body} ${styles.statusStack} flex flex-col gap-2`}
-      >
+      <div className={`${modal.body} flex flex-col gap-4`}>
         {binding.paymentMethods.length > 1 ? (
           <Field>
             <FieldLabel htmlFor="funding-payment-method">
               Payment method
             </FieldLabel>
-            <NativeSelect
-              className="w-full"
-              id="funding-payment-method"
+            <Select
               value={method}
               required
-              onChange={(event) => setMethod(event.currentTarget.value)}
+              onValueChange={(value) => setMethod(value ?? "")}
             >
-              {binding.paymentMethods.map((item) => (
-                <NativeSelectOption value={item.id} key={item.id}>
-                  {item.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger
+                className="h-11 w-full"
+                id="funding-payment-method"
+              >
+                <SelectValue>
+                  {(selectedMethod) =>
+                    binding.paymentMethods.find(
+                      (item) => item.id === selectedMethod,
+                    )?.label ?? selectedMethod
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {binding.paymentMethods.map((item) => (
+                  <SelectItem value={item.id} key={item.id}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         ) : null}
         {binding.kyc?.fields?.map((field) => {
@@ -240,23 +265,25 @@ export function FundingOrderFlow({
             <Field key={field.name}>
               <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
               {field.type === "select" ? (
-                <NativeSelect
-                  className="w-full"
-                  id={id}
-                  value={value}
+                <Select
+                  value={value || null}
                   required
-                  onChange={(event) => onChange(event.currentTarget.value)}
+                  onValueChange={(nextValue) => onChange(nextValue ?? "")}
                 >
-                  <NativeSelectOption value="">Choose</NativeSelectOption>
-                  {field.options?.map((option) => (
-                    <NativeSelectOption key={option}>
-                      {option}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
+                  <SelectTrigger className="h-11 w-full" id={id}>
+                    <SelectValue placeholder="Choose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options?.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <Input
-                  className="min-h-11"
+                  className="h-11"
                   id={id}
                   type={field.type}
                   value={value}
@@ -332,36 +359,41 @@ function QuoteReview({
   );
   return (
     <>
-      <div
-        className={`${modal.body} ${styles.statusStack} flex flex-col gap-2`}
-      >
-        <h3 className="text-section-title font-semibold">Review quote</h3>
-        <MoneyLine value={`Deposit: ${deposit}`} />
-        <MoneyLine value={`Receive: ${receive}`} />
-        {draft.quote.fees.length ? (
-          <section aria-label="Fees">
-            <div className="flex flex-col gap-2">
-              <h4 className="text-row-label font-semibold">Fees</h4>
-              {draft.quote.fees.map((fee, index) => (
-                <MoneyLine
-                  key={`${fee.label}:${index}`}
-                  value={`${fee.label}: ${formatFiatAmount(fee.amount, fee.currency)}`}
+      <div className={`${modal.body} flex flex-col gap-4`}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h3>Review quote</h3>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-3">
+              <DefinitionRow label="Deposit" value={deposit} />
+              <DefinitionRow label="Receive" value={receive} />
+              {draft.quote.fees.length ? (
+                draft.quote.fees.map((fee, index) => (
+                  <DefinitionRow
+                    key={`${fee.label}:${index}`}
+                    label={fee.label}
+                    value={formatFiatAmount(fee.amount, fee.currency)}
+                  />
+                ))
+              ) : (
+                <DefinitionRow
+                  label="Fees"
+                  value={draft.quote.feesKnown ? "None" : "Not yet available"}
                 />
-              ))}
-            </div>
-          </section>
-        ) : draft.quote.feesKnown ? (
-          <p className="text-body">Fees: None</p>
-        ) : (
-          <p className="text-body">Fees: Not yet available</p>
-        )}
-        <p className="text-caption text-muted-foreground">
-          Expires:{" "}
-          {formatPresentationDate(draft.quote.expiresAt, {
-            regionId,
-            style: "date-time-zone",
-          })}
-        </p>
+              )}
+            </dl>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Expires:{" "}
+              {formatPresentationDate(draft.quote.expiresAt, {
+                regionId,
+                style: "date-time-zone",
+              })}
+            </p>
+          </CardContent>
+        </Card>
         {error ? (
           <FundingNotice tone="error" role="alert">
             {error}
@@ -401,28 +433,30 @@ function ProviderEconomicsReview({
   );
   return (
     <>
-      <div
-        className={`${modal.body} ${styles.statusStack} flex flex-col gap-2`}
-      >
-        <h3 className="text-section-title font-semibold">
-          Review payment details
-        </h3>
-        <MoneyLine value={`Receive: ${receive}`} />
-        {fees.length ? (
-          <section aria-label="Provider fees">
-            <div className="flex flex-col gap-2">
-              <h4 className="text-row-label font-semibold">Fees</h4>
-              {fees.map((fee, index) => (
-                <MoneyLine
-                  key={`${fee.label}:${index}`}
-                  value={`${fee.label}: ${formatFiatAmount(fee.amount, fee.currency)}`}
-                />
-              ))}
-            </div>
-          </section>
-        ) : (
-          <p className="text-body">Fees: None</p>
-        )}
+      <div className={`${modal.body} flex flex-col gap-4`}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h3>Review payment details</h3>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-3">
+              <DefinitionRow label="Receive" value={receive} />
+              {fees.length ? (
+                fees.map((fee, index) => (
+                  <DefinitionRow
+                    key={`${fee.label}:${index}`}
+                    label={fee.label}
+                    value={formatFiatAmount(fee.amount, fee.currency)}
+                  />
+                ))
+              ) : (
+                <DefinitionRow label="Fees" value="None" />
+              )}
+            </dl>
+          </CardContent>
+        </Card>
       </div>
       <MoneyModalFooter
         primaryLabel="View payment instructions"
@@ -432,6 +466,16 @@ function ProviderEconomicsReview({
   );
 }
 
+function DefinitionRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-right text-sm tabular-nums">
+        <MoneyTicker value={value} />
+      </dd>
+    </div>
+  );
+}
 function OrderStatus({
   order,
   onBack,
@@ -442,23 +486,21 @@ function OrderStatus({
   const copy = stateCopy(order.state);
   return (
     <>
-      <div
-        className={`${modal.body} ${styles.statusStack} flex flex-col gap-2`}
-      >
-        <h3 className="text-section-title font-semibold">{copy.title}</h3>
+      <div className={`${modal.body} flex flex-col gap-4`}>
+        <h3 className="text-lg font-semibold">{copy.title}</h3>
         <FundingNotice>{copy.body}</FundingNotice>
         {order.instructions ? (
           <InstructionView instruction={order.instructions} />
         ) : null}
         {order.providerStatus ? (
-          <p className="text-caption text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Status: {order.providerStatus}
           </p>
         ) : null}
       </div>
       {order.state !== "dispatch-ambiguous" ? (
         <div className={modal.footer}>
-          <Button className={modal.quiet} variant="ghost" onClick={onBack}>
+          <Button variant="ghost" onClick={onBack}>
             Back
           </Button>
         </div>
@@ -470,7 +512,7 @@ function OrderStatus({
 function InstructionView({ instruction }: { instruction: Instruction }) {
   if (instruction.kind === "redirect") {
     return (
-      <a className={modal.primary} href={instruction.url} rel="noreferrer">
+      <a className={buttonVariants()} href={instruction.url} rel="noreferrer">
         Continue to payment
       </a>
     );
@@ -479,16 +521,14 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
     return (
       <section>
         <div className="flex flex-col gap-2">
-          <h4 className="text-row-label font-semibold">
-            {instruction.rail} transfer
-          </h4>
+          <h4 className="text-sm font-medium">{instruction.rail} transfer</h4>
           {instruction.bank ? (
-            <p className="text-body">Bank: {instruction.bank}</p>
+            <p className="text-sm">Bank: {instruction.bank}</p>
           ) : null}
           {instruction.accountName ? (
-            <p className="text-body">Name: {instruction.accountName}</p>
+            <p className="text-sm">Name: {instruction.accountName}</p>
           ) : null}
-          <div className="text-body">
+          <div className="text-sm">
             Account:{" "}
             <CopyableValue
               value={instruction.accountNumber}
@@ -496,13 +536,13 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
             />
           </div>
           {instruction.alias ? (
-            <div className="text-body">
+            <div className="text-sm">
               Alias:{" "}
               <CopyableValue value={instruction.alias} valueKind="alias" />
             </div>
           ) : null}
           {instruction.reference ? (
-            <div className="text-body">
+            <div className="text-sm">
               Reference:{" "}
               <CopyableValue
                 value={instruction.reference}
@@ -521,7 +561,7 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
     return (
       <section>
         <div className="flex flex-col gap-2">
-          <h4 className="text-row-label font-semibold">
+          <h4 className="text-sm font-medium">
             {instruction.scheme.toUpperCase()} payment
           </h4>
           <CopyableValue
@@ -539,7 +579,7 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
   return (
     <section>
       <div className="flex flex-col gap-2">
-        <h4 className="text-row-label font-semibold">{instruction.scheme}</h4>
+        <h4 className="text-sm font-medium">{instruction.scheme}</h4>
         <CopyableValue value={instruction.key} valueKind="payment key" />
         <MoneyLine
           value={`Pay exactly ${formatFiatAmount(instruction.amount, instruction.currency)}`}
@@ -551,7 +591,7 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
 
 function MoneyLine({ value }: { value: string }) {
   return (
-    <p className="text-body">
+    <p className="text-sm tabular-nums">
       <MoneyTicker value={value} />
     </p>
   );
