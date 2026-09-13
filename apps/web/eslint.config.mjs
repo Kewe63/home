@@ -10,7 +10,7 @@ const browserSdkMessage =
 const baseUiMessage =
   "@base-ui/react primitives may only be imported by owned components/ui wrappers";
 const literalStyleMessage =
-  "Use semantic theme tokens instead of color, radius, or size literals in utility strings.";
+  "Use semantic theme tokens instead of hex/rgba, arbitrary-px, or raw palette colors in utility strings.";
 const serverLayerMessage = "server modules must not import web client or app layers";
 const baseUiImportRestriction = {
   group: ["@base-ui/react", "@base-ui/react/**"],
@@ -54,7 +54,8 @@ const formattingSyntaxRestrictions = [
   },
 ];
 
-const literalStylePattern = String.raw`(?:#[0-9a-fA-F]{3,8}|rgba?\(|(?:[a-z-]+:)*-?(?:rounded|text|size|w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy]|inset(?:-[xy])?|top|right|bottom|left|ring|outline|border)-\[(?![^\]]*var\(--)[^\]]*(?:px|rem)[^\]]*\]|(?:^|\s)(?:[a-z-]+:)*(?:bg|text|border|ring|outline|fill|stroke)-(?:white|black|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-|\x2f|\s|$))`;
+// Stock Tailwind scale utilities (for example text-sm, rounded-md, and p-4) are allowed.
+const literalStylePattern = String.raw`(?:#[0-9a-fA-F]{3,8}|rgba?\(|(?:^|\s)(?:[a-z-]+:)*-?(?:rounded|text|size|w|h|min-w|max-w|min-h|max-h|p[trblxy]?|m[trblxy]?|gap|space-[xy]|inset(?:-[xy])?|top|right|bottom|left|ring|outline|border)-\[(?![^\]]*var\(--)(?=[^\]]*px)[^\]]+\]|(?:^|\s)(?:[a-z-]+:)*(?:bg|text|border|ring|outline|fill|stroke)-(?:white|black|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-|\x2f|\s|$))`;
 const literalStyleRestrictions = [
   {
     selector: `JSXAttribute[name.name='className'] > Literal[value=/${literalStylePattern}/]`,
