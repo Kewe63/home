@@ -100,12 +100,11 @@ export function ActivityPanel({
   const isEmpty = visibleTransfers.length === 0;
   return (
     <ActivitySurface heading={heading} leading={null} labelledBy={labelledBy} label={labelled}>
-      <ItemGroup className="gap-0">
+      {isEmpty && !suppressEmpty && !leading ? <ActivityEmpty /> : null}
+      <ItemGroup className="gap-1">
         {leading}
-        {isEmpty ? (
-          suppressEmpty ? null : <ActivityEmpty />
-        ) : (
-          <ol className="list-none p-0">
+        {isEmpty ? null : (
+          <ol className="list-none p-0 space-y-1">
             {visibleTransfers.map((transfer) => (
               <TransferActivityRow
                 key={transfer.id}

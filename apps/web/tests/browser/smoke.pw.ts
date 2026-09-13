@@ -1,3 +1,4 @@
+import { createHash, createHmac } from "node:crypto";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import type { RegionId } from "../../config/regions";
 import { parseBalancesSnapshot } from "../../shared/balances/contract";
@@ -263,6 +264,44 @@ async function amountMetrics(page: Page) {
     };
   });
 }
+
+test("a valid Home session redirects the landing route before rendering", async ({ context }) => {
+  const address = "0x1111111111111111111111111111111111111111";
+  const key = "playwright-smoke-home-session-secret-32-bytes!!";
+  const issuedAt = new Date();
+  const subject = `base-${createHash("sha256").update(address).digest("hex").slice(0, 32)}`;
+  const payload = JSON.stringify({
+    version: 1,
+    session: {
+      user: { subject },
+      smartAccount: { address, chainId: 8453 },
+      accountProvider: "base-account",
+    },
+    issuedAt: issuedAt.toISOString(),
+    expiresAt: new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+  const encoded = Buffer.from(payload, "utf8").toString("base64url");
+  const input = `v1.${encoded}`;
+  const signature = createHmac("sha256", Buffer.from(key, "utf8"))
+    .update(input)
+    .digest("base64url");
+
+  await context.addCookies([{
+    name: "home-session",
+    value: `${input}.${signature}`,
+    domain: "localhost",
+    path: "/",
+    httpOnly: true,
+    sameSite: "Lax",
+  }]);
+
+  const redirected = await context.request.get("/", { maxRedirects: 0 });
+  expect(redirected.status()).toBe(307);
+  expect(redirected.headers().location).toBe("/dashboard");
+
+  const signIn = await context.request.get("/?account=signin", { maxRedirects: 0 });
+  expect(signIn.status()).toBe(200);
+});
 
 function expectTickerInsideAmount(metrics: NonNullable<Awaited<ReturnType<typeof amountMetrics>>>) {
   expect(metrics.tickerLeft).toBeGreaterThanOrEqual(metrics.containerLeft - 0.5);
@@ -860,50 +899,45 @@ async function openScrolledBalances(page: Page) {
       });
     },
   );
-  await page.setViewportSize({ width: 390, height: 320 });
+  await page.setViewportSize({ width: 390, height: 440 });
   await signIn(page);
 
   await page.getByRole("button", { name: "Your money" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Your money" })).toBeVisible();
   await expect(page).toHaveURL(/[?&]panel=balances/);
 
-  const initialMaxTop = await page.evaluate(() => {
+  // A fresh open reveals the first batch plus whatever the observer can already see at this
+  // viewport (dense rows may not fill it). Capture that count: "reset" means returning to it.
+  await expect.poll(() => page.evaluate(countVisibleBalanceRows)).toBeGreaterThanOrEqual(10);
+  await page.waitForTimeout(150);
+  const freshCount = await page.evaluate(countVisibleBalanceRows);
+
+  const maxTop = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>(".app-main-authenticated");
     return main ? Math.max(0, main.scrollHeight - main.clientHeight) : 0;
   });
-  expect(initialMaxTop).toBeGreaterThan(0);
+  expect(maxTop).toBeGreaterThan(0);
 
-  // Bring the real sentinel into view so IntersectionObserver reveals another batch.
-  await page.locator("[data-balances-sentinel]").scrollIntoViewIfNeeded();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          document.querySelectorAll(
-            '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
-          ).length,
-      ),
-    )
-    .toBeGreaterThan(10);
-
-  const scrollState = await page.evaluate(() => {
+  // A real user scroll — a good way down the current range, not to the sentinel itself.
+  const target = await page.evaluate((max) => {
     const main = document.querySelector<HTMLElement>(".app-main-authenticated");
-    if (!main) return { target: 0, maxTop: 0 };
-    const maxTop = Math.max(0, main.scrollHeight - main.clientHeight);
-    const target = Math.min(240, maxTop);
-    main.scrollTop = target;
+    if (!main) return 0;
+    const next = Math.min(max, Math.max(240, Math.round(max * 0.6)));
+    main.scrollTop = next;
     main.dispatchEvent(new Event("scroll", { bubbles: true }));
-    return { target, maxTop };
-  });
-  expect(scrollState.target).toBeGreaterThan(0);
+    return next;
+  }, maxTop);
+  expect(target).toBeGreaterThan(0);
 
+  // The real IntersectionObserver reveals at least one more batch on scroll.
+  await expect.poll(() => page.evaluate(countVisibleBalanceRows)).toBeGreaterThan(freshCount);
   const revealedCount = await page.evaluate(
     () =>
       document.querySelectorAll(
         '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
       ).length,
   );
-  return { target: scrollState.target, revealedCount, maxTop: scrollState.maxTop };
+  return { target, revealedCount, maxTop, freshCount };
 }
 
 async function openInvestAssetDetail(page: Page) {
@@ -931,11 +965,6 @@ async function expectBalancesRestored(
   expected: { target: number; revealedCount: number; maxTop: number },
 ) {
   await expect(page.getByRole("heading", { name: "Your money" })).toBeVisible();
-  const restoredMaxTop = await page.evaluate(() => {
-    const main = document.querySelector<HTMLElement>(".app-main-authenticated");
-    return main ? Math.max(0, main.scrollHeight - main.clientHeight) : 0;
-  });
-  const expectedTop = Math.min(expected.target, restoredMaxTop);
   await expect
     .poll(() =>
       page.evaluate(
@@ -944,9 +973,9 @@ async function expectBalancesRestored(
             ?.scrollTop ?? 0),
       ),
     )
-    .toBe(expectedTop);
-  // The restored offset is exact unless the denser current layout requires clamping.
-  expect(expectedTop).toBeLessThanOrEqual(expected.maxTop);
+    .toBe(expected.target);
+  // The restored offset stays within the current scrollable range.
+  expect(expected.target).toBeLessThanOrEqual(expected.maxTop);
   await expect
     .poll(() =>
       page.evaluate(
@@ -974,7 +1003,13 @@ async function clickForwardAndWaitForUrl(
   }).toPass({ timeout: 15_000 });
 }
 
-async function expectBalancesReset(page: Page) {
+function countVisibleBalanceRows(): number {
+  return document.querySelectorAll(
+    '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
+  ).length;
+}
+
+async function expectBalancesReset(page: Page, freshCount: number) {
   await expect(page.getByRole("heading", { level: 1, name: "Your money" })).toBeVisible();
   await expect
     .poll(() =>
@@ -985,16 +1020,7 @@ async function expectBalancesReset(page: Page) {
       ),
     )
     .toBe(0);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          document.querySelectorAll(
-            '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
-          ).length,
-      ),
-    )
-    .toBe(10);
+  await expect.poll(() => page.evaluate(countVisibleBalanceRows)).toBe(freshCount);
 }
 
 test("Balances restores scroll and reveal after app Back from an opened asset", async ({ page }) => {
@@ -1028,29 +1054,29 @@ test("Balances restores scroll and reveal after Account Done", async ({ page }) 
 });
 
 test("Balances starts at the top after browser Back from generic Invest", async ({ page }) => {
-  await openScrolledBalances(page);
+  const state = await openScrolledBalances(page);
   await clickForwardAndWaitForUrl(page, "Invest", /[?&]panel=invest/);
   await expect(page.getByRole("heading", { name: "Invest" })).toBeVisible();
   await page.goBack();
-  await expectBalancesReset(page);
+  await expectBalancesReset(page, state.freshCount);
 });
 
 test("Balances starts at the top after browser Back from Home", async ({ page }) => {
-  await openScrolledBalances(page);
+  const state = await openScrolledBalances(page);
   await clickForwardAndWaitForUrl(page, "Back", /\/dashboard$/);
   await page.goBack();
-  await expectBalancesReset(page);
+  await expectBalancesReset(page, state.freshCount);
 });
 
 test("Balances starts at the top after Activity and browser Back", async ({ page }) => {
-  await openScrolledBalances(page);
+  const state = await openScrolledBalances(page);
   await clickForwardAndWaitForUrl(page, "Back", /\/dashboard$/);
   await clickForwardAndWaitForUrl(page, "Activity", /[?&]panel=activity/);
   await expect(page.getByRole("heading", { name: "Activity" })).toBeVisible();
   await page.goBack();
   await expect(page).not.toHaveURL(/[?&]panel=activity/);
   await page.goBack();
-  await expectBalancesReset(page);
+  await expectBalancesReset(page, state.freshCount);
 });
 
 test("account sign-in and settings stay reachable at 390px, 320px, and 200% text", async ({ page }) => {

@@ -146,15 +146,12 @@ export function HomeMoneyGroups({
   onOpenGroup: (group: MoneyGroupPresentation["id"]) => void;
 }) {
   if (groups.length > 0) {
-    const homeGroups = ([
-      { id: "cash", label: "Cash" },
-      { id: "investments", label: "Investments" },
-    ] as const).map(({ id, label }) => {
-      const group = groups.find((candidate) => candidate.id === id);
-      return group
-        ? { ...group, rows: group.rows.slice(0, HOME_MONEY_GROUP_PREVIEW_COUNT) }
-        : { id, label, displaySubtotal: null, rows: [] };
-    });
+    // Preview each group the snapshot presents; an absent group (no investments yet) stays
+    // hidden rather than showing a header and a More row that lead nowhere.
+    const homeGroups = groups.map((group) => ({
+      ...group,
+      rows: group.rows.slice(0, HOME_MONEY_GROUP_PREVIEW_COUNT),
+    }));
     return (
       <GroupedBalancesList
         groups={homeGroups}
