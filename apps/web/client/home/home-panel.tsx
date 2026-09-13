@@ -115,10 +115,10 @@ export function HomePanel({
               {assetBalances?.breakdown.length ? (
                 <p className="flex flex-wrap items-center gap-x-1 text-xs tabular-nums sm:text-sm">
                   {assetBalances.breakdown.map((item, index) => (
-                    <span className="inline-flex items-center gap-1" key={item.id}>
-                      {index > 0 ? <span aria-hidden="true">·</span> : null}
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap" key={item.id}>
                       <span>{item.label}</span>
                       <MoneyTicker value={item.value} reserveDigits={false} />
+                      {index < assetBalances.breakdown.length - 1 ? <span aria-hidden="true">·</span> : null}
                     </span>
                   ))}
                 </p>

@@ -125,7 +125,9 @@ export function selectMoneyGroups(snapshot: BalancesSnapshot): MoneyGroups {
   );
 
   return {
-    cash: [...cash].sort(compareCashSelections),
+    // Cash keeps selectCash's authored order (selected local → canonical USD → other cash);
+    // only investments sort by value.
+    cash,
     investments: investments.sort(compareHoldings),
   };
 }
@@ -139,15 +141,6 @@ export function selectTotal(snapshot: BalancesSnapshot): BalancesSnapshot["total
   return snapshot.total;
 }
 
-function compareCashSelections(left: CashSelection, right: CashSelection): number {
-  if (left.kind === "holding" && right.kind === "holding") {
-    return compareHoldings(left.holding, right.holding);
-  }
-  if (left.kind === "unsupported" && right.kind === "unsupported") {
-    return left.name.localeCompare(right.name, "en", { sensitivity: "base" });
-  }
-  return left.kind === "holding" ? -1 : 1;
-}
 
 function compareHoldings(left: Holding, right: Holding): number {
   const leftValue = pricedValue(left);

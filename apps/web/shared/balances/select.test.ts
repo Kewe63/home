@@ -81,6 +81,18 @@ describe("balance selectors", () => {
     expect(selectCash(snapshot)[0]).toMatchObject({ currency: "BRL", symbol: "BRZ" });
   });
 
+  test("the cash group keeps the authored regional order even when USD is larger", () => {
+    const de = buildBalancesSnapshotFixture({
+      region: "DE",
+      registry: {
+        usdc: { balance: ready("5000000000"), value: priced("EUR", "460000") },
+        eurc: { balance: ready("1000000"), value: priced("EUR", "100") },
+      },
+    });
+    expect(selectMoneyGroups(de).cash.map((entry) => entry.kind === "holding" ? entry.holding.id : entry.key))
+      .toEqual([verifiedLocalCashAssets.EUR.id, "usdc"]);
+  });
+
   test("classifies stablecoins as cash and every non-vault asset as one investments group", () => {
     const snapshot = buildBalancesSnapshotFixture({
       registry: {

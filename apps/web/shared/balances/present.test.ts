@@ -111,7 +111,7 @@ describe("balance presentation", () => {
       snapshot: { ...balancesSnapshotFixture, total: { status: "partial", value: decimal("123", 2), currency: "USD" } },
       error: null,
       revalidating: true,
-    }, { status: "available", totalBaseUnits: "1000123" });
+    });
     expect(ready).toMatchObject({
       status: "ready",
       displayTotal: "$1.23",
@@ -119,7 +119,7 @@ describe("balance presentation", () => {
       breakdown: [
         { id: "cash", label: "Cash", value: "$1,234.56" },
         { id: "investments", label: "Investments", value: "$1,618.20" },
-        { id: "saved", label: "Saved", value: "$1.000123" },
+        { id: "saved", label: "Saved", value: "$1,000.12" },
       ],
       revalidating: true,
     });

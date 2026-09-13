@@ -1,5 +1,5 @@
 import type { FiatCurrencyCode } from "@/config/regions";
-import { formatPresentationTokenAmount, formatUsdStablecoinAmount } from "@/shared/formatting";
+import { formatPresentationTokenAmount } from "@/shared/formatting";
 import {
   formatPresentationFiat,
   presentationCurrencyName,
@@ -34,10 +34,6 @@ export type MoneyBreakdownItem = {
   value: string;
 };
 
-export type PresentedSavedBalance =
-  | { status: "available"; totalBaseUnits: string }
-  | { status: "unavailable" };
-
 export type BalancesPresentation = {
   status: "loading" | "ready" | "unavailable";
   displayTotal: string | null;
@@ -51,10 +47,7 @@ export type BalancesPresentation = {
 
 export const HOME_MONEY_GROUP_PREVIEW_COUNT = 3;
 
-export function presentBalances(
-  state: BalancesState,
-  savedBalance?: PresentedSavedBalance,
-): BalancesPresentation {
+export function presentBalances(state: BalancesState): BalancesPresentation {
   if (state.status === "loading") {
     return { status: "loading", displayTotal: null, groups: [], breakdown: [], rows: [] };
   }
@@ -79,12 +72,13 @@ export function presentBalances(
       ? [{ id: group.id, label: group.label, value: group.displaySubtotal }]
       : []
   );
-  if (savedBalance?.status === "available") {
-    breakdown.push({
-      id: "saved",
-      label: "Saved",
-      value: formatUsdStablecoinAmount(savedBalance.totalBaseUnits),
-    });
+  // Saved uses the same quote-currency subtotal as Cash and Investments; vault shares are
+  // priced holdings in the snapshot, so the three figures share currency, precision, and the
+  // unpriced rule (omitted, never 0).
+  const vaultShares = state.snapshot.holdings.filter((holding) => holding.kind === "vault-share");
+  const savedSubtotal = vaultShares.length > 0 ? presentHoldingsSubtotal(vaultShares, state.snapshot) : null;
+  if (savedSubtotal) {
+    breakdown.push({ id: "saved", label: "Saved", value: savedSubtotal });
   }
   return {
     status: "ready",
