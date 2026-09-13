@@ -189,7 +189,7 @@ function IncrementalBalancesList({
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) onRevealMore();
       },
-      { root, rootMargin: "0px 0px 60% 0px" },
+      { root, rootMargin: "0px 0px 100% 0px" },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
