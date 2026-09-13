@@ -34,7 +34,7 @@ export const LIVELINE_PLOT_PADDING = {
   left: 16,
 } as const;
 
-/** First-load shimmer fades on `--motion-tab` so Liveline's chartReveal can play. */
+/** First-load shimmer fades on `--home-motion-tab` so Liveline's chartReveal can play. */
 export const CHART_COVER_FADE_MS = 180;
 
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";

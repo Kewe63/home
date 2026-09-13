@@ -169,7 +169,7 @@
   z-index: 3;
   inset: 0;
   pointer-events: none;
-  transition: opacity var(--motion-tab) ease;
+  transition: opacity var(--home-motion-tab) ease;
 }
 
 .plotCover[data-fading="true"] {

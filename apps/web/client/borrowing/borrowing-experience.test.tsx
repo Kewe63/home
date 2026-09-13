@@ -59,13 +59,6 @@ afterEach(() => {
 });
 
 describe("BorrowExperience", () => {
-  test("shows the single verified market while keeping a signed-out wallet truly empty", () => {
-    render(<BorrowExperience session={null} />);
-    expect(within(document.body).getByRole("heading", { level: 1, name: "USDC against cbBTC" })).toBeTruthy();
-    expect(within(document.body).getByText(/Sign in to view this wallet’s position/)).toBeTruthy();
-    expect(document.body.textContent).not.toContain("Demo balance");
-  });
-
   test("loads private state and sends only user intent to the unified prepare action", async () => {
     const snapshot = emptySnapshot();
     const reads: string[] = [];

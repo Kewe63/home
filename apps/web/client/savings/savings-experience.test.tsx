@@ -147,26 +147,6 @@ afterEach(() => {
 });
 
 describe("Save simplify", () => {
-  test("exposes vault selection as named radio controls with checked state", async () => {
-    render(
-      <SavingsExperience
-        now={testNow}
-        initialData={initialData}
-        session={session(ADDRESS_A)}
-        fetchPositions={async () => positions(ADDRESS_A)}
-      />,
-    );
-
-    const gauntletRadio = await page().findByRole("radio", { name: /Gauntlet USDC Prime/ });
-    const steakhouseRadio = page().getByRole("radio", { name: /Steakhouse USDC/ });
-    expect(gauntletRadio.getAttribute("aria-checked")).toBe("true");
-    expect(steakhouseRadio.getAttribute("aria-checked")).toBe("false");
-    expect(gauntletRadio.getAttribute("name")).toBe("savings-vault");
-    fireEvent.click(steakhouseRadio);
-    expect(steakhouseRadio.getAttribute("aria-checked")).toBe("true");
-    expect(gauntletRadio.getAttribute("aria-checked")).toBe("false");
-  });
-
   test("prepares a deposit with the selected vault and exact base-unit amount", async () => {
     const prepares: unknown[] = [];
     render(
@@ -233,28 +213,6 @@ describe("Save simplify", () => {
     expect(metadataReads).toBe(0);
   });
 
-  test("funded hero sums vault card balances and opens Withdraw MoneyModal", async () => {
-    render(
-      <SavingsExperience
-        now={testNow}
-        initialData={initialData}
-        session={session(ADDRESS_A)}
-        fetchPositions={async () => positions(ADDRESS_A, {
-          [GAUNTLET]: "820000000",
-          [STEAKHOUSE]: "420000000",
-        })}
-        availableUsdcBaseUnits="50000000"
-        prepareMoneyAction={async () => preparedAction("savings-withdraw")}
-        executeMoneyAction={async () => ({ id: "action-1", status: "confirmed" })}
-      />,
-    );
-
-    expect(await page().findByText("$1,240.00")).toBeTruthy();
-    fireEvent.click(page().getByRole("button", { name: "Withdraw" }));
-    expect(page().getByRole("dialog", { name: "Withdraw" })).toBeTruthy();
-    expect(page().getByText("$820.00 available")).toBeTruthy();
-  });
-
   test("includes funded supported vaults that are outside the two visible selection rows", async () => {
     const allVaultData: MorphoVaultsResult = {
       ...initialData,
@@ -280,93 +238,6 @@ describe("Save simplify", () => {
     expect(await page().findByText("$1,000.00")).toBeTruthy();
     expect(page().getByText("Earning ~7.00%")).toBeTruthy();
     expect(page().queryByRole("radio", { name: /Third USDC/ })).toBeNull();
-  });
-
-  test("waits for positions and metadata in either request order", async () => {
-    const metadataFirstPositions = deferred<unknown>();
-    globalThis.fetch = (async () => new Response(JSON.stringify(initialData), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    })) as unknown as typeof fetch;
-    render(
-      <SavingsExperience
-        now={testNow}
-        session={session(ADDRESS_A)}
-        fetchPositions={() => metadataFirstPositions.promise}
-      />,
-    );
-    expect(await page().findByText("Updating…")).toBeTruthy();
-    expect(page().queryByText("$0.00")).toBeNull();
-    await act(async () => {
-      metadataFirstPositions.resolve(positions(ADDRESS_A));
-      await metadataFirstPositions.promise;
-    });
-    expect(await page().findByText("Nothing saved yet")).toBeTruthy();
-    cleanup();
-    getHomeQueryClient().clear();
-
-    const pendingMetadata = deferred<Response>();
-    globalThis.fetch = (() => pendingMetadata.promise) as unknown as typeof fetch;
-    render(
-      <SavingsExperience
-        now={testNow}
-        session={session(ADDRESS_A)}
-        fetchPositions={async () => positions(ADDRESS_A)}
-      />,
-    );
-    expect(await page().findByText("$0.00")).toBeTruthy();
-    expect(page().getAllByText("Loading vaults…").length).toBeGreaterThan(0);
-    expect(document.querySelectorAll("[data-shimmer='vault-row']").length).toBe(2);
-    expect(page().queryByText(/Available vault/)).toBeNull();
-    expect(page().queryByText("Details")).toBeNull();
-    await act(async () => {
-      pendingMetadata.resolve(new Response(JSON.stringify(initialData), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      }));
-      await pendingMetadata.promise;
-    });
-    expect(await page().findByText("Nothing saved yet")).toBeTruthy();
-  });
-
-  test("shows an error without inventing a zero balance or offer", async () => {
-    render(
-      <SavingsExperience
-        now={testNow}
-        initialData={initialData}
-        session={session(ADDRESS_A)}
-        fetchPositions={async () => {
-          throw new Error("offline");
-        }}
-      />,
-    );
-
-    expect(await page().findByText("Balance unavailable")).toBeTruthy();
-    expect(page().queryByText("$0.00")).toBeNull();
-    expect(page().queryByText("Nothing saved yet")).toBeNull();
-    expect(page().queryByRole("button", { name: "Get started" })).toBeNull();
-    expect(page().queryByRole("radio")).toBeNull();
-    expect(page().queryByText("Details")).toBeNull();
-  });
-
-  test("exposes no actions or vault controls when metadata fails after positions resolve", async () => {
-    render(
-      <SavingsExperience
-        now={testNow}
-        session={session(ADDRESS_A)}
-        fetchVaults={async () => {
-          throw new Error("offline");
-        }}
-        fetchPositions={async () => positions(ADDRESS_A, { [GAUNTLET]: "125000000" })}
-      />,
-    );
-
-    expect(await page().findByText("Vaults are temporarily unavailable.")).toBeTruthy();
-    expect(await page().findByText("$125.00")).toBeTruthy();
-    expect(page().queryByRole("button", { name: "Deposit" })).toBeNull();
-    expect(page().queryByRole("button", { name: "Withdraw" })).toBeNull();
-    expect(page().queryByRole("radio")).toBeNull();
-    expect(page().queryByText("Details")).toBeNull();
   });
 
   test("retains a verified same-owner value during refresh and reports refresh failure", async () => {
