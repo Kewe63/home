@@ -2,9 +2,7 @@
 
 import { Separator } from "@/components/ui/separator";
 import { MoneyModal, MoneyModalHeader } from "@/client/money-modal";
-import modal from "@/client/money-modal/money-modal.module.css";
 import type { TransactionDetails } from "./transaction-explorer";
-import styles from "./transaction-details.module.css";
 
 export type {
   TransactionDetailRow,
@@ -37,21 +35,21 @@ export function TransactionDetailsModal({
         onClose={onClose}
         closeLabel="Close transaction details"
       />
-      <div className={modal.body}>
-        <dl className={`${modal.rows} ${details?.explorer ? modal.rowsWithFooter : ""}`}>
+      <div className="min-h-0 flex-1 overflow-auto p-4">
+        <dl className="divide-y divide-border border-y">
           {rows.map((row) => (
-            <div className={modal.row} key={row.label}>
-              <dt>{row.label}</dt>
-              <dd title={row.title}>{row.value}</dd>
+            <div className="flex items-start justify-between gap-4 py-3 text-sm" key={row.label}>
+              <dt className="text-muted-foreground">{row.label}</dt>
+              <dd className="min-w-0 text-right font-medium tabular-nums" title={row.title}>{row.value}</dd>
             </div>
           ))}
         </dl>
         {details?.explorer ? (
           <>
-            <Separator className={styles.divider} />
-            <div className={styles.explorerWrap}>
+            <Separator className="my-4" />
+            <div className="flex justify-end">
               <a
-                className={styles.explorer}
+                className="text-sm font-medium text-muted-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href={details.explorer.href}
                 target="_blank"
                 rel="noopener noreferrer"

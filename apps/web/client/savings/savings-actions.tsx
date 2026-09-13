@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
+import { LoaderCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { AccountWalletClient } from "@/client/account/cdp-client";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
@@ -24,7 +25,6 @@ import type {
 } from "@/shared/money-actions/types";
 import { formatApy, formatUsdcUsd, parseUsdcAmount } from "@/client/savings/format";
 import type { MorphoVaultCandidate } from "@/shared/savings/types";
-import modal from "@/client/money-modal/money-modal.module.css";
 
 export type SavingsActionMode = "deposit" | "withdraw";
 
@@ -87,10 +87,10 @@ export function SavingsMoneyDialog({
       onClose: () => setSuccess(null),
       message: (
         <div className="flex flex-col gap-1">
-          <strong className="text-row-label font-semibold">
+          <strong className="text-sm font-medium">
             {success.mode === "deposit" ? "Deposited" : "Withdrew"} {success.amount}
           </strong>
-          <p className="text-metadata text-muted-foreground">Save · {success.candidateName}</p>
+          <p className="text-xs text-muted-foreground">Save · {success.candidateName}</p>
         </div>
       ),
     });
@@ -213,7 +213,7 @@ export function SavingsMoneyDialog({
           closeLabel={`Close ${mode} dialog`}
         />
 
-        <div className={modal.body}>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
           {step === "amount" ? (
             <>
               <MoneyAmountDisplay
@@ -245,10 +245,7 @@ export function SavingsMoneyDialog({
                 ]}
               />
               {step === "pending" ? (
-                <StatusMessage id="savings-action-pending" className={modal.pending}>
-                  <span className={modal.spinner} aria-hidden="true" />
-                  Waiting for your wallet…
-                </StatusMessage>
+                <StatusMessage id="savings-action-pending"><span className="flex items-center gap-2"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />Waiting for your wallet…</span></StatusMessage>
               ) : null}
             </>
           ) : null}

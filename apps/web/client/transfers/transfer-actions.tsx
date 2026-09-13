@@ -28,7 +28,6 @@ import { useHomeToast } from "@/client/home/use-home-toast";
 import { SendDialog } from "./send-dialog";
 import { formatSendConfirmAmount, getTransferAsset } from "@/shared/transfers/transfer-helpers";
 import type { ConfirmedTransfer, TransferAssetAvailability } from "@/shared/transfers/types";
-import styles from "./transfers.module.css";
 
 const subscribeToMountedState = () => () => {};
 const mountedClientSnapshot = () => true;
@@ -106,13 +105,13 @@ export function TransferActionsForWallet({
       duration: 6_000,
       onClose: () => setSuccess(null),
       message: (
-        <div className={styles.successContent}>
-          <span className={styles.successMark} aria-hidden="true">✓</span>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground" aria-hidden="true">✓</span>
           <div>
-            <strong className="text-row-label font-semibold">
+            <strong className="text-sm font-medium">
               Sent <MoneyTicker value={formatSendConfirmAmount(visibleSuccess.amountBaseUnits, visibleSuccess.assetId)} />
             </strong>
-            <p className={`${styles.successDetail} text-metadata text-muted-foreground`}>
+            <p className="mt-1 text-xs text-muted-foreground">
               {getTransferAsset(visibleSuccess.assetId)?.symbol ?? visibleSuccess.assetId} · Base ·{" "}
               <CopyableValue
                 value={visibleSuccess.recipient}
@@ -160,9 +159,8 @@ export function TransferActionsForWallet({
   }, [routing]);
 
   return (
-    <div className={styles.actions} aria-label="Transfer actions">
+    <div className="flex flex-wrap gap-2" aria-label="Transfer actions">
       <Button
-        className={styles.secondaryAction}
         data-action-trigger=""
         variant="secondary"
         disabled={!boundary}

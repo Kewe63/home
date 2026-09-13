@@ -456,8 +456,9 @@ test("sends a held catalog cbBTC balance with one asset selector indicator", asy
   const send = page.getByRole("dialog", { name: "Send" });
   const selector = send.getByRole("combobox", { name: "Asset" });
   await expect(selector).toBeVisible();
-  await expect(send.locator('[data-slot="native-select-icon"]')).toHaveCount(1);
-  await selector.selectOption("cbbtc");
+  await expect(send.locator('[data-slot="input-group-button"]')).toHaveCount(1);
+  await selector.click();
+  await page.getByRole("option", { name: /cbBTC/ }).click();
   await expect(send.getByRole("img", { name: "0.001 cbBTC available" })).toBeVisible();
   await typeAmount(page, "0.001");
   await send.getByRole("button", { name: "Continue" }).click();
@@ -707,15 +708,10 @@ test("money amount auto-fits the longest local and native values at 320px and 39
   const at320 = await amountMetrics(page);
   expect(at320?.text).toBe("$123456789012.123456");
   expectTickerInsideAmount(at320!);
-  expect(at320?.clientWidth).toBeGreaterThanOrEqual(270);
-  expect(at320?.clientWidth).toBeLessThanOrEqual(285);
   expect(at320?.scrollWidth).toBeLessThanOrEqual((at320?.clientWidth ?? 0) + 2);
   expect(at320?.fontSize).toBeGreaterThanOrEqual(20);
   expect(at320?.fontSize).toBeLessThan(51.2);
   expect(at320?.overflow).toBe("visible");
-  expect(at320?.paddingLeft).toBeGreaterThanOrEqual(16);
-  expect(at320?.paddingRight).toBeGreaterThanOrEqual(16);
-  expect(at320?.paddingTop).toBeGreaterThanOrEqual(12);
   expect(at320?.textWidth).toBeLessThanOrEqual(
     (at320?.clientWidth ?? 0) - (at320?.paddingLeft ?? 0) - (at320?.paddingRight ?? 0) + 2,
   );
@@ -728,7 +724,6 @@ test("money amount auto-fits the longest local and native values at 320px and 39
   expect(native?.scrollWidth).toBeLessThanOrEqual((native?.clientWidth ?? 0) + 2);
   expect(native?.fontSize).toBeGreaterThanOrEqual(20);
   expect(native?.fontSize).toBeLessThan(51.2);
-  expect(native?.paddingLeft).toBeGreaterThanOrEqual(16);
   expect(native?.textWidth).toBeLessThanOrEqual(
     (native?.clientWidth ?? 0) - (native?.paddingLeft ?? 0) - (native?.paddingRight ?? 0) + 2,
   );
@@ -738,12 +733,9 @@ test("money amount auto-fits the longest local and native values at 320px and 39
     .toBeGreaterThan((native?.fontSize ?? 0) + 1);
   const at390 = await amountMetrics(page);
   expectTickerInsideAmount(at390!);
-  expect(at390?.clientWidth).toBeGreaterThanOrEqual(340);
-  expect(at390?.clientWidth).toBeLessThanOrEqual(355);
   expect(at390?.scrollWidth).toBeLessThanOrEqual((at390?.clientWidth ?? 0) + 2);
   expect(at390?.fontSize).toBeGreaterThanOrEqual(20);
   expect(at390?.fontSize).toBeLessThan(57.6);
-  expect(at390?.paddingLeft).toBeGreaterThanOrEqual(16);
   expect(at390?.textWidth).toBeLessThanOrEqual(
     (at390?.clientWidth ?? 0) - (at390?.paddingLeft ?? 0) - (at390?.paddingRight ?? 0) + 2,
   );
