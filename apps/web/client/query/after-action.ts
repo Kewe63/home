@@ -1,7 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { VerifiedAccountSession } from "@/client/account/session-client";
 import { dataOwnerKey as dataOwnerKeyForSession } from "@/client/account/owner-keys";
-import { freshUntilMoved, type BalanceSnapshot } from "./fresh-until-moved";
+import {
+  freshUntilMoved,
+  type BalanceSnapshot,
+  type FreshUntilMovedClock,
+} from "./fresh-until-moved";
 import { ownerQueryKey, ownerQueryMeta } from "./query-client";
 import { parsePortfolioValuationSnapshot } from "@/shared/portfolio/contract";
 import type { PortfolioValuationSnapshot } from "@/shared/portfolio/valuation-types";
@@ -90,6 +94,7 @@ export async function startBalanceFreshness(input: {
   queryClient: QueryClient;
   fetchVerifiedResource: FetchVerifiedResource;
   state: BalanceFreshnessState;
+  clock?: FreshUntilMovedClock;
 }): Promise<void> {
   const { actionId, session, queryClient, fetchVerifiedResource, state } = input;
   if (!session?.smartAccount || state.moved.has(actionId)) return;
@@ -109,15 +114,28 @@ export async function startBalanceFreshness(input: {
   const valuationQueries = queryClient.getQueryCache().findAll({
     queryKey: [dataOwnerKey, "valuation"],
   });
-  const firstSnapshot = valuationQueries
-    .map((query) => query.state.data)
-    .find(isPortfolioValuationSnapshot);
-  if (!firstSnapshot || !isLatestStart()) return;
-  const initial = selectAffectedBalances(firstSnapshot, assetIds);
+  const hasSnapshot = valuationQueries.some((q) => isPortfolioValuationSnapshot(q.state.data));
+  if (!hasSnapshot || !isLatestStart()) return;
+  const initial: Record<string, string | null> = Object.fromEntries(assetIds.map((id) => [id, null]));
+  // Regions refresh independently; an inactive region's snapshot can be hours
+  // old. Merge oldest → newest so the freshest non-null balance wins and older
+  // snapshots only fill gaps, otherwise a stale region reports a false move.
+  const byFreshness = [...valuationQueries].sort(
+    (a, b) => a.state.dataUpdatedAt - b.state.dataUpdatedAt,
+  );
+  for (const q of byFreshness) {
+    const data = q.state.data;
+    if (!isPortfolioValuationSnapshot(data)) continue;
+    const found = selectAffectedBalances(data, assetIds);
+    for (const [key, value] of Object.entries(found)) {
+      if (value !== null) initial[key] = value;
+    }
+  }
   const run = freshUntilMoved({
     initial,
+    clock: input.clock,
     readFresh: async () => {
-      let latest = initial;
+      const merged: Record<string, string | null> = Object.fromEntries(assetIds.map((id) => [id, null]));
       for (const valuationQuery of valuationQueries) {
         const region = valuationQuery.queryKey[2];
         if (typeof region !== "string") continue;
@@ -140,9 +158,12 @@ export async function startBalanceFreshness(input: {
             region as import("@/config/regions").RegionId,
           ),
         });
-        latest = selectAffectedBalances(snapshot, assetIds);
+        const found = selectAffectedBalances(snapshot, assetIds);
+        for (const [key, value] of Object.entries(found)) {
+          if (value !== null) merged[key] = value;
+        }
       }
-      return latest;
+      return merged;
     },
   });
   state.runs.get(actionId)?.();
