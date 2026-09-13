@@ -100,7 +100,7 @@ function CopyableValueControl({
         variant="ghost"
         className={cn(
           "inline h-auto min-h-0 min-w-0 border-0 bg-transparent p-0 font-mono text-inherit no-underline whitespace-normal break-all transition-colors hover:bg-transparent active:translate-y-0",
-          presentation === "full" && "flex w-full items-start justify-start gap-2 text-left text-sm",
+          presentation === "full" && "flex min-h-11 w-full items-start justify-start gap-2 py-2 text-left text-sm",
           status === "copied" && "text-primary",
           className,
         )}

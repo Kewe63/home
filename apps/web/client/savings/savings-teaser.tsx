@@ -122,7 +122,10 @@ export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
   const candidate = metadataQuery.data
     ? preferredSavingsCandidates(metadataQuery.data.candidates)[0] ?? null
     : null;
-  const loading = !metadataQuery.data && !metadataQuery.isError ||
+  // A restoring/validating session is unknown, not zero: keep the shimmer until the owner is known.
+  const sessionSettling = account.status === "restoring" || account.status === "validating";
+  const loading = sessionSettling ||
+    (!metadataQuery.data && !metadataQuery.isError) ||
     Boolean(sessionKey && !positionsQuery.data && !positionsQuery.isError);
 
   if (loading) return <ShimmerRows count={1} />;
@@ -143,8 +146,9 @@ export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
       render={<Button variant="ghost" type="button" />}
       className="min-h-16 flex-nowrap cursor-pointer items-center border-0 text-left hover:bg-muted"
       onClick={onOpen}
-      aria-label="Save"
+      aria-describedby="save-teaser-hint"
     >
+      <span id="save-teaser-hint" hidden>Open Save</span>
       <ItemMedia variant="image" className="size-10 self-center translate-y-0 rounded-full bg-muted">
         <PiggyBank className="size-4 text-muted-foreground" aria-hidden="true" />
       </ItemMedia>
