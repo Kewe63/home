@@ -54,3 +54,7 @@ Next.js 16 does not print a First Load JS column. `/dashboard` initial JS is the
 | `/dashboard` initial JS | 1,045,544 B | 1,267,179 B |
 | Total `.next/static` CSS | 182,923 B | 136,036 B |
 | Web test wall time | 3.18 s | 4.32 s |
+| Shell client chunk, gzip | 119,307 B | 185,189 B |
+| All client JS, gzip | 854,662 B | 929,100 B |
+
+The JS growth (+8.7 % gzipped) is the Base UI runtime — Drawer, Select, Field, Toast, Tabs, ToggleGroup, `useRender`, floating-ui — replacing the hand-rolled sheet physics, toast queue, and Radix Select. It lands in the shell's main client chunk because `MoneyModal` is imported statically. Two follow-ups can recover most of it: `motion` is now imported only by `components/home-mark.tsx` and can be dropped or lazy-loaded, and the Drawer-backed money sheets can be `next/dynamic`-loaded on first open, the same deferral wave 4 applied to the wallet SDK. The CSS drop (−26 %) is the BEM sheet, the alias layer, and most CSS Modules leaving.
