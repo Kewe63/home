@@ -600,7 +600,7 @@ function BorrowExperienceInner({
                       ) : null}
                     </Field>
                   </FieldGroup>
-                  <Button
+                  <Button className="h-11"
                     size="lg"
                     type="submit"
                     disabled={!amount.trim() || preview.status === "loading"}

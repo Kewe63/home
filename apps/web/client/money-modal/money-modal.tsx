@@ -52,9 +52,9 @@ export function MoneyModalHeader({ title, titleId, onBack, onClose, closeDisable
 }) {
   return (
     <DrawerHeader className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 pb-0 text-left">
-      {onBack ? <Button variant="ghost" size="icon-lg" aria-label="Back" onClick={onBack}><ArrowLeft className="size-4" aria-hidden="true" /></Button> : <span />}
+      {onBack ? <Button variant="ghost" size="icon-lg" className="size-11" aria-label="Back" onClick={onBack}><ArrowLeft className="size-4" aria-hidden="true" /></Button> : <span />}
       <DrawerTitle id={titleId} className="text-center">{title}</DrawerTitle>
-      <Button variant="ghost" size="icon-lg" aria-label={closeLabel} disabled={closeDisabled} onClick={onClose}><X className="size-4" aria-hidden="true" /></Button>
+      <Button variant="ghost" size="icon-lg" className="size-11" aria-label={closeLabel} disabled={closeDisabled} onClick={onClose}><X className="size-4" aria-hidden="true" /></Button>
     </DrawerHeader>
   );
 }
@@ -65,8 +65,8 @@ export function MoneyModalFooter({ primaryLabel, onPrimary, primaryDisabled = fa
 }) {
   return (
     <DrawerFooter className="pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <Button size="lg" type={primaryType} disabled={primaryDisabled} onClick={onPrimary}>{primaryLabel}</Button>
-      {secondaryLabel && onSecondary ? <Button size="lg" variant="ghost" disabled={secondaryDisabled} onClick={onSecondary}>{secondaryLabel}</Button> : null}
+      <Button size="lg" className="h-11" type={primaryType} disabled={primaryDisabled} onClick={onPrimary}>{primaryLabel}</Button>
+      {secondaryLabel && onSecondary ? <Button size="lg" variant="ghost" className="h-11" disabled={secondaryDisabled} onClick={onSecondary}>{secondaryLabel}</Button> : null}
     </DrawerFooter>
   );
 }

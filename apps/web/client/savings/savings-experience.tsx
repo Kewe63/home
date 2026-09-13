@@ -566,7 +566,7 @@ export function SavingsExperience({
 
       {loadState.status !== "error" && (availableBalance || !sessionKey) ? (
         <div className={`grid gap-2 ${funded ? "grid-cols-2" : "grid-cols-1"}`}>
-          <Button
+          <Button className="h-11"
             size="lg"
             disabled={!actionsReady}
             onClick={() => openAction("deposit")}
@@ -574,7 +574,7 @@ export function SavingsExperience({
             {funded ? "Deposit" : "Get started"}
           </Button>
           {funded ? (
-            <Button
+            <Button className="h-11"
               size="lg"
               variant="secondary"
               disabled={!actionsReady || !canWithdraw}

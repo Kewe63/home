@@ -2,7 +2,7 @@
 
 import { MoneyTicker } from "@/components/money-ticker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode, useMemo } from "react";
 import { LoaderCircle } from "lucide-react";
 import { AddressField } from "@/components/address";
 import { CopyableValue } from "@/components/copyable-value";
@@ -23,7 +23,6 @@ import {
   assertTransferRequest,
   formatSendConfirmAmount,
   getTransferAsset,
-  getTransferAssets,
   isTransferRecipient,
   normalizeTransferRecipient,
   parseTransferAmount,
@@ -80,11 +79,10 @@ export function SendDialog({
   const [step, setStep] = useState<SendStep>("amount");
   const [error, setError] = useState<string | null>(null);
   const resumedActionRef = useRef<string | null>(null);
-  const catalogAssets = getTransferAssets();
-  const selectedStillAvailable = !assetId || catalogAssets.some((asset) => asset.id === assetId);
+  const selectedStillAvailable = !assetId || availableAssets?.some((asset) => asset.id === assetId) !== false;
   const activeAssetId = assetId && selectedStillAvailable
     ? assetId
-    : availableAssets?.[0]?.id ?? catalogAssets[0]?.id ?? null;
+    : availableAssets?.[0]?.id ?? null;
   function changeAmount(value: string, source: MoneyAmountChangeSource) {
     setAmountChangeSource(source);
     setAmount(value);
@@ -99,7 +97,10 @@ export function SendDialog({
   const selectedAsset = activeAssetId ? getTransferAsset(activeAssetId) : null;
   const pricing = useMoneyAssetPricing(selectedAsset?.symbol ?? "");
   const selectedAvailability = availableAssets?.find((asset) => asset.id === activeAssetId);
-  const assetOptions = catalogAssets.map((asset) => ({ id: asset.id, label: `${asset.symbol} — ${asset.name}` }));
+  const assetOptions = useMemo(
+    () => availableAssets?.map((asset) => ({ id: asset.id, label: `${asset.symbol} — ${asset.name}` })) ?? [],
+    [availableAssets],
+  );
 
   useEffect(() => {
     if (!open || !ownerBoundary || !resumeActionId) return;
