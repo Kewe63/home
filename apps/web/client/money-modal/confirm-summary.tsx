@@ -3,7 +3,7 @@
 import { MoneyTicker } from "@/components/money-ticker";
 import type { ReactNode } from "react";
 
-export type MoneyConfirmRow = { label: string; value: ReactNode };
+export type MoneyConfirmRow = { label: string; value: ReactNode; fullValue?: boolean };
 
 export function MoneyConfirmSummary({ amount, lead, rows }: { amount: string; lead: string; rows: readonly MoneyConfirmRow[] }) {
   return (
@@ -14,9 +14,16 @@ export function MoneyConfirmSummary({ amount, lead, rows }: { amount: string; le
       </div>
       <dl>
         {rows.map((row) => (
-          <div className="flex items-start justify-between gap-4 border-b py-3 text-sm" key={row.label}>
+          <div
+            className={row.fullValue
+              ? "grid items-start gap-1 border-b py-3 text-sm last:border-b-0 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3"
+              : "flex items-start justify-between gap-4 border-b py-3 text-sm last:border-b-0"}
+            key={row.label}
+          >
             <dt className="text-muted-foreground">{row.label}</dt>
-            <dd className="min-w-0 text-right font-medium tabular-nums">{row.value}</dd>
+            <dd className={row.fullValue ? "min-w-0 sm:text-right" : "min-w-0 text-right font-medium tabular-nums"}>
+              {row.value}
+            </dd>
           </div>
         ))}
       </dl>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, type ReactNode } from "react";
-import { ChevronRight } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,29 +58,27 @@ export function AccountSettings({
   const region = presentationRegions[regionId];
 
   return (
-    <div className="min-w-0 space-y-8 py-2 pb-6 [overflow-wrap:anywhere]">
+    <div className="min-w-0 space-y-8 py-2 pb-6">
       <section className="space-y-3" aria-labelledby="preferences-heading">
         <h2 id="preferences-heading" className="text-lg font-semibold">
           Preferences
         </h2>
         <Card>
           <CardContent className="px-2">
-            <Item className="min-w-0 flex-col items-stretch sm:flex-row sm:flex-nowrap sm:items-center">
-              <div className="flex min-w-0 flex-col items-start gap-2.5 sm:flex-1 sm:flex-row sm:items-center">
-                <ItemMedia className="self-center translate-y-0">
-                  <CurrencyMark
-                    currency={region.currency.code}
-                    symbol={region.currency.symbol}
-                  />
-                </ItemMedia>
-                <ItemContent className="min-w-0 flex-1">
-                  <ItemTitle>Country</ItemTitle>
-                  <ItemDescription id="country-help" className="line-clamp-none">
-                    Sets how money is shown
-                  </ItemDescription>
-                </ItemContent>
-              </div>
-              <ItemActions className="w-full shrink-0 sm:max-w-1/2 sm:justify-end">
+            <Item className="min-w-0 flex-nowrap items-center">
+              <ItemMedia className="self-center translate-y-0">
+                <CurrencyMark
+                  currency={region.currency.code}
+                  symbol={region.currency.symbol}
+                />
+              </ItemMedia>
+              <ItemContent className="min-w-0 flex-1">
+                <ItemTitle>Country</ItemTitle>
+                <ItemDescription id="country-help" className="line-clamp-none">
+                  Sets how money is shown
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions className="min-w-0 shrink justify-end">
                 <CountrySelect
                   value={regionId}
                   onValueChange={onRegionChange}
@@ -111,12 +109,12 @@ export function AccountSettings({
               <li>
                 <Item>
                   <ItemContent>
-                    <ItemTitle>Base account</ItemTitle>
-                    <ItemDescription>
+                    <ItemTitle className="font-normal text-muted-foreground">Base account</ItemTitle>
+                    <ItemDescription className="line-clamp-none text-foreground">
                       {accountAddress ? (
                         <CopyableValue
                           value={accountAddress}
-                          display={formatAddress(accountAddress)}
+                          presentation="full"
                           valueKind="address"
                         />
                       ) : (
@@ -126,24 +124,17 @@ export function AccountSettings({
                   </ItemContent>
                 </Item>
               </li>
-              <li aria-hidden="true">
-                <ItemSeparator className="my-0" />
-              </li>
-              <li>
-                <Item
-                  render={<Button variant="ghost" />}
-                  className="h-auto border-0 text-left"
+              <li className="px-3 py-2.5">
+                <Button
+                  variant="outline"
+                  className="h-11 w-full justify-start"
                   onClick={onSignOut}
                   aria-describedby="sign-out-hint"
                 >
-                  <ItemContent>
-                    <ItemTitle>Sign out</ItemTitle>
-                  </ItemContent>
-                  <ItemActions aria-hidden="true">
-                    <ChevronRight className="size-4" />
-                  </ItemActions>
-                  <span id="sign-out-hint" hidden>Sign out of Home</span>
-                </Item>
+                  <LogOut className="size-4" aria-hidden="true" />
+                  Sign out
+                </Button>
+                <span id="sign-out-hint" hidden>Sign out of Home</span>
               </li>
             </ul>
           </CardContent>

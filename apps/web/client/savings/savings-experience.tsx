@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +32,6 @@ import type {
 } from "@/shared/money-actions/types";
 import { usePortfolioValuation } from "@/client/portfolio";
 import {
-  formatAddress,
   formatPresentationPercentage,
   formatUsdStablecoinAmount,
 } from "@/shared/formatting";
@@ -56,7 +54,12 @@ import {
   parsePositionResult,
   type SavingsPositionsResult,
 } from "@/shared/savings/contracts/positions";
-import { readUsdcBaseUnits, shortVaultLabel } from "./format";
+import {
+  preferredSavingsCandidates,
+  readUsdcBaseUnits,
+  savingsVaultApyLabel,
+  shortVaultLabel,
+} from "./format";
 import {
   formatExactSavingsApy,
   getSavingsRateState,
@@ -268,11 +271,7 @@ export function SavingsExperience({
 
   const allCandidates = useMemo(() => {
     if (loadState.status !== "ready") return [];
-    return [...loadState.data.candidates].sort(
-      (left, right) =>
-        Number(/gauntlet/i.test(right.name)) -
-        Number(/gauntlet/i.test(left.name)),
-    );
+    return preferredSavingsCandidates(loadState.data.candidates);
   }, [loadState]);
   const candidates = allCandidates.slice(0, 2);
   const selected =
@@ -417,7 +416,7 @@ export function SavingsExperience({
                   title="Nothing saved yet"
                   description={
                     selected && loadState.status === "ready"
-                      ? `Available vault · ${shortVaultLabel(selected.name)} · ${availableVaultApyLabel(selected, loadState.data, rateNowMs)}`
+                      ? `Available vault · ${shortVaultLabel(selected.name)} · ${savingsVaultApyLabel(selected, loadState.data, rateNowMs)}`
                       : undefined
                   }
                 />
@@ -441,7 +440,7 @@ export function SavingsExperience({
                 title="Nothing saved yet"
                 description={
                   selected && loadState.status === "ready"
-                    ? `Available vault · ${shortVaultLabel(selected.name)} · ${availableVaultApyLabel(selected, loadState.data, rateNowMs)}`
+                    ? `Available vault · ${shortVaultLabel(selected.name)} · ${savingsVaultApyLabel(selected, loadState.data, rateNowMs)}`
                     : undefined
                 }
               />
@@ -490,15 +489,15 @@ export function SavingsExperience({
                   }
                 />
               ) : loadState.status === "ready" ? (
-                availableVaultApyLabel(candidate, loadState.data, rateNowMs)
+                savingsVaultApyLabel(candidate, loadState.data, rateNowMs)
               ) : (
                 "APY unavailable"
               );
               return (
-                <Fragment key={candidate.vaultAddress}>
                   <Item
+                    key={candidate.vaultAddress}
                     variant={isSelected ? "muted" : "default"}
-                    className="min-h-16 flex-nowrap items-center rounded-none border-0"
+                    className="min-h-16 flex-nowrap cursor-pointer items-center border-0 hover:bg-muted"
                     render={
                       <Button
                         variant="ghost"
@@ -532,8 +531,6 @@ export function SavingsExperience({
                       {rowValue}
                     </ItemActions>
                   </Item>
-                  {candidate !== candidates.at(-1) ? <ItemSeparator className="my-0" /> : null}
-                </Fragment>
               );
             })}
               </ItemGroup>
@@ -552,14 +549,15 @@ export function SavingsExperience({
                       {formatPresentationPercentage(selected.feeRate)}
                     </dd>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="grid items-start gap-1 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3">
                     <dt className="text-sm text-muted-foreground">Curator</dt>
-                    <dd className="min-w-0 text-right text-sm">
+                    <dd className="min-w-0 text-sm sm:text-right">
                       {selected.curatorAddress ? (
                         <CopyableValue
                           value={selected.curatorAddress}
-                          display={formatAddress(selected.curatorAddress)}
+                          presentation="full"
                           valueKind="address"
+                          className="sm:justify-end"
                         />
                       ) : (
                         "—"
@@ -631,21 +629,6 @@ function vaultInitials(name: string): string {
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-function availableVaultApyLabel(
-  candidate: MorphoVaultCandidate,
-  metadata: MorphoVaultsResult,
-  nowMs: number,
-): string {
-  const rate = getSavingsRateState(candidate, {
-    metadataFetchedAt: metadata.source.fetchedAt,
-    metadataStale: metadata.stale,
-    nowMs,
-  });
-  if (rate.status === "stale") return "APY stale";
-  if (rate.status === "unavailable") return "APY unavailable";
-  return `${formatPresentationPercentage(rate.value)} APY`;
 }
 
 function fundedVaultApyLabel(

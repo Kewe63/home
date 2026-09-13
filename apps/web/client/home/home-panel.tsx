@@ -18,6 +18,7 @@ import { previewHomeBalanceItems } from "@/client/portfolio";
 import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
 import type { RegionId } from "@/config/regions";
+import { SavingsTeaser } from "@/client/savings/savings-teaser";
 import { ConnectedActivityPanel } from "./activity-panel";
 import { HomeBalancesList } from "./balances-panel";
 import type { HomeAssetBalancesPresentation } from "./home-types";
@@ -153,16 +154,11 @@ export function HomePanel({
       <section aria-labelledby="save-heading">
         <Card>
           <CardHeader>
-            <SectionHeader
-              headingId="save-heading"
-              title="Save"
-              actionLabel="Earn"
-              onOpen={onOpenSave}
-            />
+            <CardTitle id="save-heading" role="heading" aria-level={2}>Save</CardTitle>
           </CardHeader>
-          {showSessionShimmer ? (
-            <CardContent className="px-2"><ShimmerRows count={1} /></CardContent>
-          ) : null}
+          <CardContent className="px-2">
+            <SavingsTeaser onOpen={onOpenSave} />
+          </CardContent>
         </Card>
       </section>
 

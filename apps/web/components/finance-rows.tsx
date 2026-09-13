@@ -116,7 +116,7 @@ function FinanceRow({
     <li>
       <Item
         data-kind={kind}
-        className={cn("min-h-16 flex-nowrap items-center rounded-none border-0", onActivate && "cursor-pointer")}
+        className={cn("min-h-16 flex-nowrap items-center border-0", onActivate && "cursor-pointer hover:bg-muted")}
         {...(onActivate
           ? {
               render: (

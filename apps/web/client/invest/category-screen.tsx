@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
-import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { ItemSeparator } from "@/components/ui/item";
+import { ShimmerRows } from "@/client/home/panel-shared";
 import { useOptionalAppChrome } from "@/components/app-chrome";
 import type { InvestAsset } from "@/config/invest-assets";
 import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
@@ -69,20 +69,14 @@ export function CategoryScreen({
         <Card>
           <CardContent className="px-2">
             <ul className="m-0 list-none p-0">
-              {assets.map((asset, index) => (
-                <Fragment key={asset.id}>
-                  {index > 0 ? (
-                    <li aria-hidden="true">
-                      <ItemSeparator className="my-0" />
-                    </li>
-                  ) : null}
-                  <DiscoverAssetRow
-                    asset={asset}
-                    market={market}
-                    assetMarkResolution={assetMarkResolution}
-                    onOpen={() => onOpenAsset(asset, shelfId)}
-                  />
-                </Fragment>
+              {assets.map((asset) => (
+                <DiscoverAssetRow
+                  key={asset.id}
+                  asset={asset}
+                  market={market}
+                  assetMarkResolution={assetMarkResolution}
+                  onOpen={() => onOpenAsset(asset, shelfId)}
+                />
               ))}
             </ul>
           </CardContent>
@@ -166,9 +160,9 @@ function MemePaginationFooter({
   return (
     <div className="space-y-3">
       {loadingMore ? (
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-          <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          Loading more…
+        <div role="status" aria-live="polite">
+          <ShimmerRows count={1} />
+          <span className="sr-only">Loading more…</span>
         </div>
       ) : null}
       {loadMoreError ? (

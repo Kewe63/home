@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { ItemGroup, ItemSeparator } from "@/components/ui/item";
+import { ItemGroup } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoneyTicker } from "@/components/money-ticker";
 import { CurrencyMark } from "@/components/currency-mark";
@@ -224,11 +224,12 @@ function BalancesList({
   return (
     <ItemGroup className="gap-0">
       <ul className="list-none p-0" data-balance-list="">
-        {items.map((asset, index) => (
-          <Fragment key={asset.id}>
-            {index > 0 ? <li aria-hidden="true"><ItemSeparator /></li> : null}
-            <HomeBalanceRowView asset={asset} assetMarkResolution={assetMarkResolution} />
-          </Fragment>
+        {items.map((asset) => (
+          <HomeBalanceRowView
+            key={asset.id}
+            asset={asset}
+            assetMarkResolution={assetMarkResolution}
+          />
         ))}
       </ul>
     </ItemGroup>

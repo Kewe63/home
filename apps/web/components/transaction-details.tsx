@@ -1,6 +1,7 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
+import { CopyableValue } from "@/components/copyable-value";
 import { MoneyModal, MoneyModalBody, MoneyModalHeader } from "@/client/money-modal";
 import type { TransactionDetails } from "./transaction-explorer";
 
@@ -38,9 +39,23 @@ export function TransactionDetailsModal({
       <MoneyModalBody className="pt-4">
         <dl>
           {rows.map((row) => (
-            <div className="flex items-start justify-between gap-4 border-b py-3 text-sm" key={row.label}>
-              <dt className="text-muted-foreground">{row.label}</dt>
-              <dd className="min-w-0 text-right font-medium tabular-nums" title={row.title}>{row.value}</dd>
+            <div
+              className={row.title
+                ? "grid items-start gap-1 border-b py-3 last:border-b-0 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3"
+                : "flex items-start justify-between gap-4 border-b py-3 text-sm last:border-b-0"}
+              key={row.label}
+            >
+              <dt className="text-sm text-muted-foreground">{row.label}</dt>
+              <dd className={row.title ? "min-w-0 sm:text-right" : "min-w-0 text-right font-medium tabular-nums"}>
+                {row.title ? (
+                  <CopyableValue
+                    value={row.title}
+                    presentation="full"
+                    valueKind={row.label === "Transaction" ? "transaction hash" : "address"}
+                    className="sm:justify-end"
+                  />
+                ) : row.value}
+              </dd>
             </div>
           ))}
         </dl>

@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ItemSeparator } from "@/components/ui/item";
 import type { InvestAsset } from "@/config/invest-assets";
 import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import type { MarketDataState } from "@/shared/invest/invest-market";
@@ -47,20 +45,14 @@ export function DiscoverShelf({
         <CardContent className="px-2">
           {assets.length > 0 ? (
             <ul className="m-0 list-none p-0">
-              {assets.map((asset, index) => (
-                <Fragment key={asset.id}>
-                  {index > 0 ? (
-                    <li aria-hidden="true">
-                      <ItemSeparator className="my-0" />
-                    </li>
-                  ) : null}
-                  <DiscoverAssetRow
-                    asset={asset}
-                    market={market}
-                    assetMarkResolution={assetMarkResolution}
-                    onOpen={() => onOpenAsset(asset)}
-                  />
-                </Fragment>
+              {assets.map((asset) => (
+                <DiscoverAssetRow
+                  key={asset.id}
+                  asset={asset}
+                  market={market}
+                  assetMarkResolution={assetMarkResolution}
+                  onOpen={() => onOpenAsset(asset)}
+                />
               ))}
             </ul>
           ) : (

@@ -85,7 +85,7 @@ function MoneyActionReviewContent({
             );
             return (
               <div
-                className="grid min-h-11 grid-cols-1 items-start gap-1 border-b py-2 text-sm sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3"
+                className="grid min-h-11 grid-cols-1 items-start gap-1 border-b py-2 text-sm last:border-b-0 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3"
                 key={`${amount.assetId}-${amount.direction}-${index}`}
               >
                 <dt className="text-muted-foreground">
@@ -138,7 +138,7 @@ function MoneyActionReviewContent({
 
 function ReviewRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid min-h-11 grid-cols-1 items-start gap-1 border-b py-2 text-sm sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3">
+    <div className="grid min-h-11 grid-cols-1 items-start gap-1 border-b py-2 text-sm last:border-b-0 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="m-0 overflow-wrap-anywhere font-medium tabular-nums sm:text-right">{children}</dd>
     </div>
