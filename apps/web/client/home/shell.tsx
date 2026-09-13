@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
 } from "react";
 import { useRouter } from "next/navigation";
 import { AccountSignInSheet } from "@/client/account/account-screen";
@@ -26,7 +25,6 @@ import {
   withoutFlowHref,
   type ShellFlow,
 } from "@/config/shell-location";
-import { presentationRegions } from "@/config/regions";
 import { useOptionalAppChrome } from "@/components/app-chrome";
 import { markHomePerformance } from "@/client/observability/perf-marks";
 import {
@@ -52,12 +50,6 @@ const loadingAssetBalances: HomeAssetBalancesPresentation = {
   displayTotal: null,
   statusLabel: "Updating…",
   items: [],
-};
-
-type RegionStyle = CSSProperties & {
-  "--region-accent": string;
-  "--region-accent-soft": string;
-  "--region-surface": string;
 };
 
 type HomeShellProps = HomeExperienceProps & {
@@ -239,12 +231,6 @@ export function HomeShell({
     if (forwardRequest !== 0) pendingBalancesRestoreRef.current = false;
   }, [forwardRequest]);
 
-  const region = presentationRegions[regionId];
-  const regionStyle: RegionStyle = {
-    "--region-accent": region.theme.accent,
-    "--region-accent-soft": region.theme.accentSoft,
-    "--region-surface": region.theme.surface,
-  };
   const isChecking = account.status === "restoring" || account.status === "validating";
   const isVerified = account.status === "verified" && account.verification === "server";
   const mayPaintBalances = account.verification !== null;
@@ -449,7 +435,7 @@ export function HomeShell({
 
   return (
     <HomeShellRoutingProvider value={routingValue}>
-      <div className={`app-frame${routeMode === "dashboard" ? " app-frame-shell" : ""}`} style={regionStyle}>
+      <div className={`app-frame${routeMode === "dashboard" ? " app-frame-shell" : ""}`}>
       <ShellHeader
         isAccountSettingsOpen={isAccountSettingsOpen}
         nestedChromeTitle={nestedChromeTitle}

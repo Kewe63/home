@@ -235,9 +235,9 @@ describe("presentation money formatting", () => {
     expect(moneyChangeTone("−1.00%")).toBe("negative");
     expect(moneyChangeTone("—")).toBe("neutral");
     expect(MONEY_CHANGE_COLOR_TOKENS).toEqual({
-      positive: "var(--home-positive)",
-      negative: "var(--home-negative)",
-      neutral: "var(--home-text-muted)",
+      positive: "var(--market-gain)",
+      negative: "var(--market-loss)",
+      neutral: "var(--muted-foreground)",
     });
   });
 
