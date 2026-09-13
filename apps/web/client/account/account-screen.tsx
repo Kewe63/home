@@ -2,7 +2,7 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { DrawerTitle } from "@/components/ui/drawer";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { AppDrawer } from "@/client/money-modal";
 import { X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type FormEvent, type ReactNode } from "react";
@@ -266,21 +266,21 @@ export function AccountSignInSheet({
         initialFocusRef={initialFocusRef}
         immediate
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 px-4 pt-1 pb-2">
-          <DrawerTitle className="text-sheet-title font-semibold" id="account-sign-in-title">
+        <DrawerHeader className="flex-row items-center justify-between text-left">
+          <DrawerTitle id="account-sign-in-title">
             {flowId ? "Check your email" : "Sign in to Home"}
           </DrawerTitle>
           <Button
-            className="min-h-11 min-w-11 shrink-0"
-            size="icon"
+            className="shrink-0"
+            size="icon-lg"
             variant="secondary"
             onClick={closeAndCancelAttempt}
             aria-label="Close sign in"
           >
             <X aria-hidden="true" />
           </Button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
+        </DrawerHeader>
+        <div className="min-h-0 flex-1 overflow-auto p-4">
           {signInBlocked ? (
             <SignInBlockedPanel reason={signInAvailability === "provider-unavailable" ? "provider-unavailable" : "unconfigured"} />
           ) : (
