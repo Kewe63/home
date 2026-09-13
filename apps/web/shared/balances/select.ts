@@ -100,6 +100,20 @@ export function selectCash(snapshot: BalancesSnapshot): CashSelection[] {
   return selected;
 }
 
+export function selectAssetCount(snapshot: BalancesSnapshot): number {
+  const cashSelections = selectCash(snapshot);
+  const selectedCashIds = new Set(
+    cashSelections.flatMap((entry) => entry.kind === "holding" ? [entry.holding.id] : []),
+  );
+  const nonCashCount = snapshot.holdings.filter((holding) =>
+    holding.kind !== "vault-share" &&
+    !selectedCashIds.has(holding.id) &&
+    holding.balance.status === "ready" &&
+    holding.balance.baseUnits !== "0"
+  ).length;
+  return cashSelections.length + nonCashCount;
+}
+
 export function selectTotal(snapshot: BalancesSnapshot): BalancesSnapshot["total"] {
   return snapshot.total;
 }

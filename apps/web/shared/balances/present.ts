@@ -5,7 +5,7 @@ import {
   presentationCurrencyName,
 } from "@/shared/portfolio/valuation-format";
 import { exactDecimalToFraction } from "@/shared/portfolio/valuation-math";
-import { selectCash, selectTotal, type CashSelection } from "./select";
+import { selectAssetCount, selectCash, selectTotal, type CashSelection } from "./select";
 import type { BalancesSnapshot, BalancesState, ExactDecimal, Holding } from "./types";
 
 export type BalanceRowModel = {
@@ -27,6 +27,7 @@ export type BalancesPresentation = {
   displayTotal: string | null;
   totalStatus?: "complete" | "partial" | "unavailable";
   statusLabel?: string;
+  metadataLabel?: string;
   rows: BalanceRowModel[];
   revalidating?: true;
 };
@@ -72,6 +73,7 @@ export function presentBalances(state: BalancesState): BalancesPresentation {
       : unavailable
         ? "Balance unavailable"
         : undefined,
+    metadataLabel: assetCountLabel(selectAssetCount(state.snapshot)),
     rows: presentBalanceRows(state.snapshot),
     ...(state.revalidating ? { revalidating: true as const } : {}),
   };
@@ -107,6 +109,10 @@ export function presentBalanceRows(snapshot: BalancesSnapshot): BalanceRowModel[
   unpriced.sort(compareRows);
   dust.sort(compareRows);
   return [...cash, ...priced.map(({ row }) => row), ...unpriced, ...dust];
+}
+
+function assetCountLabel(count: number): string | undefined {
+  return count > 0 ? `${count} ${count === 1 ? "asset" : "assets"}` : undefined;
 }
 
 function presentCash(entry: CashSelection, snapshot: BalancesSnapshot): BalanceRowModel {

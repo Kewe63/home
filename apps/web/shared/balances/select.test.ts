@@ -4,10 +4,14 @@ import { getTransferAsset } from "@/shared/transfers/transfer-helpers";
 import {
   balancesSnapshotFixture,
   buildBalancesSnapshotFixture,
+  catalogHolding,
+  FIXTURE_CATALOG,
+  priced,
   ready,
   unavailableBalance,
 } from "./fixtures";
 import {
+  selectAssetCount,
   selectBalanceBaseUnits,
   selectCash,
   selectSendable,
@@ -74,6 +78,20 @@ describe("balance selectors", () => {
     const snapshot = buildBalancesSnapshotFixture({ region: "BR" });
     expect(selectCash(snapshot).map((entry) => entry.kind)).toEqual(["unsupported", "holding"]);
     expect(selectCash(snapshot)[0]).toMatchObject({ currency: "BRL", symbol: "BRZ" });
+  });
+
+  test("counts displayed cash and positive assets without vault shares or unavailable rows", () => {
+    const snapshot = buildBalancesSnapshotFixture({
+      registry: {
+        usdc: { balance: ready("0") },
+        eth: { balance: ready("1") },
+        cbbtc: { balance: unavailableBalance },
+        "morpho-steakhouse-usdc": { balance: ready("1"), underlyingBalance: ready("5") },
+      },
+      catalog: [catalogHolding(FIXTURE_CATALOG.priced, "1", priced("USD", "1"))],
+    });
+
+    expect(selectAssetCount(snapshot)).toBe(3);
   });
 
   test("returns null for unavailable and preserves successful zero", () => {

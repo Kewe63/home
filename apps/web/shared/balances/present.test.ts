@@ -108,7 +108,13 @@ describe("balance presentation", () => {
       error: null,
       revalidating: true,
     });
-    expect(ready).toMatchObject({ status: "ready", displayTotal: "$1.23", totalStatus: "partial", revalidating: true });
+    expect(ready).toMatchObject({
+      status: "ready",
+      displayTotal: "$1.23",
+      totalStatus: "partial",
+      metadataLabel: "6 assets",
+      revalidating: true,
+    });
     expect(JSON.stringify(ready.rows)).not.toContain("Updating");
     expect(presentBalances({ status: "error", snapshot: null, error: "balances-unavailable" })).toMatchObject({
       status: "unavailable",
