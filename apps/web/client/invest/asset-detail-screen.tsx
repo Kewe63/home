@@ -107,7 +107,7 @@ export function AssetDetailScreen({
         <strong
           className={`${styles.price} ${
             price.tone === "ready"
-              ? "font-mono text-amount font-semibold"
+              ? "tabular-nums text-amount font-semibold"
               : "text-section-title font-semibold text-muted-foreground"
           }`}
           data-tone={price.tone}

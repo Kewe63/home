@@ -91,7 +91,7 @@ export function MoneyTicker({
     <span
       {...props}
       className={[
-        "relative inline-flex w-fit max-w-full justify-end whitespace-nowrap font-mono tabular-nums text-inherit",
+        "relative inline-flex w-fit max-w-full justify-end whitespace-nowrap tabular-nums text-inherit",
         className,
       ]
         .filter(Boolean)

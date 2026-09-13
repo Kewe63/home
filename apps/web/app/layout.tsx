@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { dmMono, dmSans } from "@/app/fonts/local-fonts";
 import { brand } from "@/config/brand";
 import { CdpAccountProvider } from "@/client/account/cdp-client";
 import { normalizeProjectId } from "@/client/account/session-client";
@@ -30,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   );
 
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
         <HomeQueryClientProvider>{accountProvider}</HomeQueryClientProvider>
       </body>

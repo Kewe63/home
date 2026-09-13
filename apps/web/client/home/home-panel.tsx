@@ -97,7 +97,7 @@ export function HomePanel({
             data-shimmer="hero"
           />
         ) : (
-          <div className="balance-hero-total text-amount font-mono">
+          <div className="balance-hero-total text-amount tabular-nums">
             <MoneyTicker value={assetBalances?.displayTotal ?? "—"} />
           </div>
         )}

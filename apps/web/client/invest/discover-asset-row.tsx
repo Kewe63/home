@@ -51,7 +51,7 @@ export function DiscoverAssetRow({
           <ItemDescription className="text-metadata!">{asset.displaySymbol}</ItemDescription>
         </ItemContent>
         <ItemContent className="items-end text-right">
-          <ItemTitle className="font-mono text-row-value!">{price.value}</ItemTitle>
+          <ItemTitle className="tabular-nums text-row-value!">{price.value}</ItemTitle>
           {change !== "—" ? (
             <ItemDescription
               className={`${styles.change} text-metadata`}

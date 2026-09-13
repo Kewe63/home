@@ -85,7 +85,7 @@ function FinanceRow({
           valueTone === "accent" && "text-primary",
         )}
       >
-        <ItemTitle className="text-row-value w-full justify-end font-mono font-medium text-inherit">
+        <ItemTitle className="text-row-value w-full justify-end tabular-nums font-medium text-inherit">
           {value}
         </ItemTitle>
         {valueContext === undefined ? null : (
