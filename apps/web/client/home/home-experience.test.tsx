@@ -316,6 +316,19 @@ describe("Home shell auth and privacy", () => {
 });
 
 describe("Home shell routing and intents", () => {
+  test("opens either money group from an always-present More row", async () => {
+    render(<HomeHarness accountSdk={sdk({ isSignedIn: true, ownerKey: OWNER })} />);
+    await waitForVerifiedShell();
+
+    expect(page().getByRole("button", { name: "More Cash" })).toBeTruthy();
+    fireEvent.click(page().getByRole("button", { name: "More Investments" }));
+
+    expect(`${window.location.pathname}${window.location.search}`).toBe(
+      "/dashboard?panel=balances&group=investments",
+    );
+    expect(page().getByRole("heading", { name: "Your money" })).toBeTruthy();
+  });
+
   test("keeps panel selection and browser history synchronized", async () => {
     render(<HomeHarness accountSdk={sdk({ isSignedIn: true, ownerKey: OWNER })} />);
     await waitForVerifiedShell();
