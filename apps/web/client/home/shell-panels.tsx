@@ -15,6 +15,7 @@ import {
   type ShellPanelId,
 } from "@/config/navigation";
 import type { RegionId, ResolutionSource } from "@/config/regions";
+import type { MoneyGroupId } from "@/config/shell-location";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
 import type { TransferAssetAvailability } from "@/shared/transfers/types";
 import { ActivityPage } from "./activity-panel";
@@ -86,7 +87,7 @@ export function DashboardShell({
   activitySession: VerifiedAccountSession | null;
   fetchActivity: FetchActivity;
   fetchOperations: (signal?: AbortSignal) => Promise<unknown>;
-  navigateTo: (panel: ShellPanelId) => void;
+  navigateTo: (panel: ShellPanelId, group?: MoneyGroupId | null) => void;
   urlAddMoney: boolean;
   urlReturnedFromProvider: boolean;
   urlSendFlow: boolean;
@@ -159,7 +160,7 @@ export function DashboardShell({
                     fetchActivity={fetchActivity}
                     fetchOperations={fetchOperations}
                     onOpenSave={() => navigateTo(savePanelId)}
-                    onOpenBalances={() => navigateTo(balancesPanelId)}
+                    onOpenBalances={(group) => navigateTo(balancesPanelId, group ?? null)}
                     onOpenActivity={() => navigateTo(activityPanelId)}
                     initialAddMoney={urlAddMoney}
                     returnedFromProvider={urlReturnedFromProvider}

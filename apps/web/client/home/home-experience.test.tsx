@@ -138,6 +138,21 @@ function HomeHarness({
           status: "ready",
           displayTotal: "$12.34",
           totalStatus: "complete",
+          groups: [{
+            id: "cash",
+            label: "Cash",
+            displaySubtotal: "$12.34",
+            rows: [{
+              key: "usdc",
+              group: "cash",
+              name: "US dollar",
+              mark: { kind: "flag", currency: "USD" },
+              primary: "$12.34",
+              secondary: null,
+              tone: "default",
+            }],
+          }],
+          breakdown: [{ id: "cash", label: "Cash", value: "$12.34" }],
           rows: [{
             key: "usdc",
             group: "cash",
@@ -305,9 +320,9 @@ describe("Home shell routing and intents", () => {
     render(<HomeHarness accountSdk={sdk({ isSignedIn: true, ownerKey: OWNER })} />);
     await waitForVerifiedShell();
 
-    fireEvent.click(page().getByRole("button", { name: "Balances" }));
+    fireEvent.click(page().getByRole("button", { name: "Your money" }));
     expect(`${window.location.pathname}${window.location.search}`).toBe("/dashboard?panel=balances");
-    expect(page().getByRole("heading", { name: "Balances" })).toBeTruthy();
+    expect(page().getByRole("heading", { name: "Your money" })).toBeTruthy();
 
     fireEvent.click(page().getByRole("button", { name: "Back" }));
     fireEvent.click(within(page().getByRole("navigation", { name: "Main navigation" })).getByRole("button", { name: "Invest" }));
@@ -315,7 +330,7 @@ describe("Home shell routing and intents", () => {
     expect(page().getByRole("region", { name: "Invest module" })).toBeTruthy();
 
     act(() => popHistory());
-    expect(page().getByRole("heading", { name: "Balances" })).toBeTruthy();
+    expect(page().getByRole("heading", { name: "Your money" })).toBeTruthy();
   });
 
   test("honors server-selected panel state without adding history", async () => {
@@ -342,7 +357,7 @@ describe("Home shell routing and intents", () => {
     expect(await page().findByRole("combobox", { name: "Country" })).toBeTruthy();
     fireEvent.click(page().getByRole("button", { name: "Done" }));
     expect(replaceCalls).toEqual(["/dashboard"]);
-    expect(await page().findByRole("heading", { name: "Balances" })).toBeTruthy();
+    expect(await page().findByRole("heading", { name: "Your money" })).toBeTruthy();
   });
 
   test("applies a verified inbound send intent once", async () => {

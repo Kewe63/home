@@ -1,8 +1,9 @@
 import { canonicalUsdcAsset, verifiedLocalCashAssets } from "@/config/portfolio-assets";
 import { presentationRegions, type FiatCurrencyCode } from "@/config/regions";
+import { exactDecimalToFraction } from "@/shared/portfolio/valuation-math";
 import { getTransferAsset } from "@/shared/transfers/transfer-helpers";
 import type { TransferAsset } from "@/shared/transfers/types";
-import type { BalancesSnapshot, Holding } from "./types";
+import type { BalancesSnapshot, ExactDecimal, Holding } from "./types";
 
 export type SendableBalance = TransferAsset & { balanceBaseUnits: string };
 
@@ -15,6 +16,11 @@ export type CashSelection =
       name: string;
       symbol: string;
     };
+
+export type MoneyGroups = {
+  cash: CashSelection[];
+  investments: Holding[];
+};
 
 export function selectHolding(snapshot: BalancesSnapshot, id: string): Holding | null {
   return snapshot.holdings.find((holding) => holding.id === id) ?? null;
@@ -100,20 +106,71 @@ export function selectCash(snapshot: BalancesSnapshot): CashSelection[] {
   return selected;
 }
 
-export function selectAssetCount(snapshot: BalancesSnapshot): number {
-  const cashSelections = selectCash(snapshot);
+/**
+ * Splits the ready snapshot by its authored stablecoin role. `cashCurrency` is
+ * the balance model's cash bucket marker; every non-cash, non-vault holding is
+ * an investment. Vault shares stay exclusively in Save.
+ */
+export function selectMoneyGroups(snapshot: BalancesSnapshot): MoneyGroups {
+  const cash = selectCash(snapshot);
   const selectedCashIds = new Set(
-    cashSelections.flatMap((entry) => entry.kind === "holding" ? [entry.holding.id] : []),
+    cash.flatMap((entry) => entry.kind === "holding" ? [entry.holding.id] : []),
   );
-  const nonCashCount = snapshot.holdings.filter((holding) =>
+  const investments = snapshot.holdings.filter((holding) =>
     holding.kind !== "vault-share" &&
+    holding.cashCurrency === null &&
     !selectedCashIds.has(holding.id) &&
     holding.balance.status === "ready" &&
     holding.balance.baseUnits !== "0"
-  ).length;
-  return cashSelections.length + nonCashCount;
+  );
+
+  return {
+    cash: [...cash].sort(compareCashSelections),
+    investments: investments.sort(compareHoldings),
+  };
+}
+
+export function selectAssetCount(snapshot: BalancesSnapshot): number {
+  const groups = selectMoneyGroups(snapshot);
+  return groups.cash.length + groups.investments.length;
 }
 
 export function selectTotal(snapshot: BalancesSnapshot): BalancesSnapshot["total"] {
   return snapshot.total;
+}
+
+function compareCashSelections(left: CashSelection, right: CashSelection): number {
+  if (left.kind === "holding" && right.kind === "holding") {
+    return compareHoldings(left.holding, right.holding);
+  }
+  if (left.kind === "unsupported" && right.kind === "unsupported") {
+    return left.name.localeCompare(right.name, "en", { sensitivity: "base" });
+  }
+  return left.kind === "holding" ? -1 : 1;
+}
+
+function compareHoldings(left: Holding, right: Holding): number {
+  const leftValue = pricedValue(left);
+  const rightValue = pricedValue(right);
+  if (leftValue && rightValue) {
+    return compareExactDecimals(rightValue, leftValue) || compareHoldingNames(left, right);
+  }
+  if (leftValue || rightValue) return leftValue ? -1 : 1;
+  return compareHoldingNames(left, right);
+}
+
+function pricedValue(holding: Holding): ExactDecimal | null {
+  return holding.value.status === "priced" ? holding.value.amount : null;
+}
+
+function compareExactDecimals(left: ExactDecimal, right: ExactDecimal): number {
+  const leftFraction = exactDecimalToFraction(left);
+  const rightFraction = exactDecimalToFraction(right);
+  const leftScaled = leftFraction.numerator * rightFraction.denominator;
+  const rightScaled = rightFraction.numerator * leftFraction.denominator;
+  return leftScaled < rightScaled ? -1 : leftScaled > rightScaled ? 1 : 0;
+}
+
+function compareHoldingNames(left: Holding, right: Holding): number {
+  return left.name.localeCompare(right.name, "en", { sensitivity: "base" });
 }

@@ -4,6 +4,13 @@ import { useMemo, useState } from "react";
 import { useBalances } from "@/client/balances";
 import { useAccountWallet } from "@/client/account/cdp-client";
 import { presentBalances } from "@/shared/balances/present";
+import { selectVaultPositions } from "@/shared/balances/select";
+import {
+  BASE_USDC_ADDRESS,
+  BASE_USDC_DECIMALS,
+  MORPHO_V1_CANDIDATE_ADDRESSES,
+} from "@/shared/savings/config";
+import { summarizeSavingsPortfolio } from "@/client/savings/portfolio-summary";
 import { resolvePresentation, type RegionId } from "@/config/regions";
 import { HomeExperience } from "./home-shell-provider";
 import { deriveSendAvailability } from "./send-availability";
@@ -27,7 +34,23 @@ export function PortfolioHomeExperience(
   const balances = useBalances(session, selectedRegion, account.fetchBalances, {
     enabled: account.verification === "server",
   });
-  const presentation = useMemo(() => presentBalances(balances), [balances]);
+  const savedBalance = useMemo(() => {
+    if (!balances.snapshot) return undefined;
+    return summarizeSavingsPortfolio({
+      supportedVaultAddresses: MORPHO_V1_CANDIDATE_ADDRESSES,
+      requiredAsset: {
+        address: BASE_USDC_ADDRESS,
+        symbol: "USDC",
+        decimals: BASE_USDC_DECIMALS,
+      },
+      candidates: [],
+      positions: selectVaultPositions(balances.snapshot),
+    }).balance;
+  }, [balances.snapshot]);
+  const presentation = useMemo(
+    () => presentBalances(balances, savedBalance),
+    [balances, savedBalance],
+  );
   const sendAvailability = useMemo(
     () => balances.snapshot ? deriveSendAvailability(balances.snapshot) : [],
     [balances.snapshot],
