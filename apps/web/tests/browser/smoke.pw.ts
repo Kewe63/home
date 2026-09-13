@@ -857,7 +857,7 @@ async function openScrolledBalances(page: Page) {
       page.evaluate(
         () =>
           document.querySelectorAll(
-            '[data-shell-panel]:not([hidden]) .supplied-asset-list li',
+            '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
           ).length,
       ),
     )
@@ -865,7 +865,7 @@ async function openScrolledBalances(page: Page) {
   const revealedCount = await page.evaluate(
     () =>
       document.querySelectorAll(
-        '[data-shell-panel]:not([hidden]) .supplied-asset-list li',
+        '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
       ).length,
   );
   return { target, revealedCount, maxTop };
@@ -912,7 +912,7 @@ async function expectBalancesRestored(
       page.evaluate(
         () =>
           document.querySelectorAll(
-            '[data-shell-panel]:not([hidden]) .supplied-asset-list li',
+            '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
           ).length,
       ),
     )
@@ -946,7 +946,7 @@ async function expectBalancesReset(page: Page) {
       page.evaluate(
         () =>
           document.querySelectorAll(
-            '[data-shell-panel]:not([hidden]) .supplied-asset-list li',
+            '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
           ).length,
       ),
     )

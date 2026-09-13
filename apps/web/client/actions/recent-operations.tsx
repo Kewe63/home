@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { ArrowDown, ArrowUp, Check, CircleQuestionMark, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ItemGroup, ItemSeparator } from "@/components/ui/item";
 import { MoneyTicker } from "@/components/money-ticker";
 import { ActivityRow } from "@/components/finance-rows";
 import { TransactionDetailsModal } from "@/components/transaction-details";
@@ -59,18 +61,25 @@ export function RecentMoneyActions({
   useEffect(() => onVisibleCountChange?.(visibleCount), [onVisibleCountChange, visibleCount]);
   if (operations.length === 0 && (!unavailable || !showUnavailableNotice)) return null;
 
-  return <section className="grid gap-3" aria-labelledby={embedded ? undefined : "home-operations-title"}>
-    {embedded ? null : <h3 id="home-operations-title" className="text-section-title font-semibold">Home actions</h3>}
+  return <section className="space-y-3" aria-labelledby={embedded ? undefined : "home-operations-title"}>
+    {embedded ? null : <h3 id="home-operations-title" className="text-lg font-semibold">Home actions</h3>}
     {unavailable ? (
       <Alert role="status" className="border-0 bg-transparent p-0">
-        <AlertDescription className="text-caption">
+        <AlertDescription className="text-sm text-muted-foreground">
           Recorded Home actions are unavailable. Onchain transfers are still shown.
         </AlertDescription>
       </Alert>
     ) : (
-      <ol className="grid list-none gap-1 p-0">
-        {operations.map((operation) => <OperationRow key={operation.action.id} operation={operation} onActivate={() => setSelected(operation)} />)}
-      </ol>
+      <ItemGroup className="gap-0">
+        <ol className="list-none p-0">
+          {operations.map((operation, index) => (
+            <Fragment key={operation.action.id}>
+              {index > 0 ? <li aria-hidden="true"><ItemSeparator /></li> : null}
+              <OperationRow operation={operation} onActivate={() => setSelected(operation)} />
+            </Fragment>
+          ))}
+        </ol>
+      </ItemGroup>
     )}
     <TransactionDetailsModal open={selected !== null} titleId="home-operation-details-title" details={selected ? presentOperationDetails(selected) : null} onClose={() => setSelected(null)} />
   </section>;
@@ -81,6 +90,15 @@ function OperationRow({ operation, onActivate }: { operation: RecentMoneyActionO
   const status = labelForOperationStatus(operation.status);
   const date = formatPresentationDate(operation.updatedAt, { style: "activity-short" });
   const value = amount ? `${amount.direction === "spend" ? "−" : "+"}${amount.estimated ? "~" : ""}${formatPresentationTokenAmount(amount.amountBaseUnits, amount.decimals, amount.symbol, { cashCurrency: amount.symbol === "USDC" ? "USD" : null })}` : null;
-  return <ActivityRow icon={operation.status === "confirmed" ? "✓" : operation.status === "failed" ? "×" : operation.status === "unknown" ? "?" : "↑"} iconTone={operation.status === "failed" ? "outlined" : amount?.direction === "receive" ? "incoming" : "outgoing"} label={operation.action.title} context={<><time dateTime={operation.updatedAt}>{date}</time> · {status}</>} value={value ? <MoneyTicker value={value} /> : status} valueTone={operation.status === "failed" ? "error" : operation.status === "unknown" ? "muted" : "default"} onActivate={onActivate} activateLabel={`View ${operation.action.title} transaction details`} />;
+  const icon = operation.status === "confirmed"
+    ? <Check className="size-4" />
+    : operation.status === "failed"
+      ? <X className="size-4" />
+      : operation.status === "unknown"
+        ? <CircleQuestionMark className="size-4" />
+        : amount?.direction === "receive"
+          ? <ArrowDown className="size-4" />
+          : <ArrowUp className="size-4" />;
+  return <ActivityRow icon={icon} iconTone={operation.status === "failed" ? "outlined" : amount?.direction === "receive" ? "incoming" : "outgoing"} label={operation.action.title} context={<><time dateTime={operation.updatedAt}>{date}</time> · {status}</>} value={value ? <MoneyTicker value={value} /> : status} valueTone={operation.status === "failed" ? "error" : operation.status === "unknown" ? "muted" : "default"} onActivate={onActivate} activateLabel={`View ${operation.action.title} transaction details`} />;
 }
 

@@ -111,11 +111,11 @@ function CopyableValueControl({
       </span>
       {status === "unavailable" || status === "denied" ? (
         <span className="mt-1.5 block">
-          <span className="text-metadata block text-muted-foreground" role="alert">
+          <span className="block text-xs text-muted-foreground" role="alert">
             {errorMessage}
           </span>
           <code
-            className="text-metadata mt-1.5 block w-full select-text overflow-wrap-anywhere rounded-md border border-border bg-muted px-3 py-2.5 font-mono text-foreground focus-visible:outline-3 focus-visible:outline-ring"
+            className="mt-1.5 block w-full select-text overflow-wrap-anywhere rounded-md border bg-muted px-3 py-2.5 font-mono text-xs text-foreground focus-visible:outline-3 focus-visible:outline-ring"
             aria-label={selectableLabel}
             tabIndex={0}
           >

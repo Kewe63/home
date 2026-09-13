@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { ItemGroup, ItemSeparator } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoneyTicker } from "@/components/money-ticker";
 import { CurrencyMark } from "@/components/currency-mark";
@@ -25,10 +27,7 @@ type BalancesRevealWindow = {
   count: number;
 };
 
-export function clampHomeScrollTop(
-  main: HTMLElement | null,
-  top: number,
-): number {
+export function clampHomeScrollTop(main: HTMLElement | null, top: number): number {
   if (!main || top <= 0) return Math.max(0, top);
   const maxTop = Math.max(0, main.scrollHeight - main.clientHeight);
   return maxTop > 0 ? Math.min(top, maxTop) : top;
@@ -46,9 +45,7 @@ export function homeBalancesRestoreScope(input: {
   return `${ownerKey}\u0000${provider}\u0000${subject}\u0000${smartAccount.toLowerCase()}\u0000${region}`;
 }
 
-export function balancesListKey(
-  items: readonly HomeAssetBalanceItem[],
-): string {
+export function balancesListKey(items: readonly HomeAssetBalanceItem[]): string {
   return JSON.stringify(
     items.map((item) => ({
       id: item.id,
@@ -118,12 +115,9 @@ export function BalancesPage({
     balanceStatusLabel !== "Updating…" &&
     Boolean(balanceStatusLabel);
   return (
-    <section className="balances-panel nested-home-panel" aria-label="Balances">
+    <section className="space-y-3" aria-label="Balances">
       {showBalanceStatus ? (
-        <p
-          className="balance-status balance-status-panel text-metadata"
-          data-total-status={assetBalances?.totalStatus}
-        >
+        <p className="text-sm text-muted-foreground" data-total-status={assetBalances?.totalStatus}>
           {balanceStatusLabel}
         </p>
       ) : null}
@@ -152,21 +146,11 @@ export function HomeBalancesList({
   assetMarkResolution?: AssetMarkResolution;
 }) {
   if (items.length > 0) {
-    return (
-      <ul className="supplied-asset-list">
-        {items.map((asset) => (
-          <HomeBalanceRowView
-            key={asset.id}
-            asset={asset}
-            assetMarkResolution={assetMarkResolution}
-          />
-        ))}
-      </ul>
-    );
+    return <BalancesList items={items} assetMarkResolution={assetMarkResolution} />;
   }
   if (isLoading) return <ShimmerRows count={2} />;
   if (isUnavailable) return null;
-  return <p className="balances-empty text-metadata">No balances yet</p>;
+  return <BalancesEmpty />;
 }
 
 function IncrementalBalancesList({
@@ -194,11 +178,13 @@ function IncrementalBalancesList({
     if (!active || !hasMore || typeof IntersectionObserver === "undefined") return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    const closestRoot = sentinel.closest(".app-main-authenticated");
+    const root = closestRoot instanceof HTMLElement ? closestRoot : null;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) onRevealMore();
       },
-      { rootMargin: "0px 0px 40% 0px" },
+      { root, rootMargin: "0px 0px 40% 0px" },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -207,24 +193,50 @@ function IncrementalBalancesList({
   if (items.length === 0) {
     if (isLoading) return <ShimmerRows count={2} />;
     if (isUnavailable) return null;
-    return <p className="balances-empty text-metadata">No balances yet</p>;
+    return <BalancesEmpty />;
   }
 
   return (
     <>
-      <ul className="supplied-asset-list">
-        {items.slice(0, count).map((asset) => (
-          <HomeBalanceRowView
-            key={asset.id}
-            asset={asset}
-            assetMarkResolution={assetMarkResolution}
-          />
-        ))}
-      </ul>
+      <BalancesList
+        items={items.slice(0, count)}
+        assetMarkResolution={assetMarkResolution}
+      />
       {active && hasMore ? (
-        <div ref={sentinelRef} className="balances-sentinel" aria-hidden="true" />
+        <div ref={sentinelRef} className="h-px" aria-hidden="true" />
       ) : null}
     </>
+  );
+}
+
+function BalancesList({
+  items,
+  assetMarkResolution,
+}: {
+  items: readonly HomeAssetBalanceItem[];
+  assetMarkResolution?: AssetMarkResolution;
+}) {
+  return (
+    <ItemGroup className="gap-0">
+      <ul className="list-none p-0" data-balance-list="">
+        {items.map((asset, index) => (
+          <Fragment key={asset.id}>
+            {index > 0 ? <li aria-hidden="true"><ItemSeparator /></li> : null}
+            <HomeBalanceRowView asset={asset} assetMarkResolution={assetMarkResolution} />
+          </Fragment>
+        ))}
+      </ul>
+    </ItemGroup>
+  );
+}
+
+function BalancesEmpty() {
+  return (
+    <Empty className="p-4">
+      <EmptyHeader>
+        <EmptyTitle>No balances yet</EmptyTitle>
+      </EmptyHeader>
+    </Empty>
   );
 }
 
@@ -237,14 +249,14 @@ function HomeBalanceRowView({
 }) {
   if (asset.displayContext === "Updating…") {
     return (
-      <li className="shimmer-row" data-shimmer="row">
+      <li className="flex items-center gap-3 px-3 py-2.5" data-shimmer="row">
         <CurrencyMark pending />
-        <span className="shimmer-identity">
-          <Skeleton className="shimmer-line shimmer-line-wide" />
-          <Skeleton className="shimmer-line shimmer-line-narrow" />
+        <span className="flex flex-1 flex-col gap-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-20" />
         </span>
-        <Skeleton className="shimmer-pill" />
-        <span className="sr-status">Updating…</span>
+        <Skeleton className="h-4 w-16" />
+        <span className="sr-only">Updating…</span>
       </li>
     );
   }

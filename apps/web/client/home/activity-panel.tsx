@@ -34,7 +34,7 @@ export function ActivityPage({
   if (showSessionShimmer) {
     return (
       <section
-        className="activity-panel nested-home-panel"
+        className="space-y-3"
         aria-label="Activity"
         aria-busy="true"
       >
@@ -43,7 +43,7 @@ export function ActivityPage({
     );
   }
   return (
-    <div className="activity-panel activity-panel-slot nested-home-panel">
+    <div>
       <ConnectedActivityPanel
         density="page"
         header={null}
