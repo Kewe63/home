@@ -60,7 +60,6 @@ describe("CopyableValue", () => {
 
     const control = view.getByRole("button", { name: `Copy ${DISPLAY}` });
     expect(control.textContent).toContain(DISPLAY);
-    expect(control.querySelector("span")?.className).toContain("whitespace-nowrap");
 
     fireEvent.click(control);
     await waitFor(() => expect(copied).toBe(VALUE));

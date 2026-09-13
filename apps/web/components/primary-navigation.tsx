@@ -28,7 +28,7 @@ export function PrimaryNavigation({
 
   return (
     <nav
-      className="order-2 grid h-14 w-full shrink-0 grid-cols-2 border-t bg-background pb-[env(safe-area-inset-bottom)] sm:order-1 sm:mx-auto sm:max-w-2xl sm:border-x sm:border-b sm:pb-0"
+      className="order-2 grid min-h-14 w-full shrink-0 grid-cols-2 border-t bg-background pb-[env(safe-area-inset-bottom)] sm:order-1 sm:mx-auto sm:max-w-2xl sm:border-x sm:border-b sm:pb-0"
       aria-label="Main navigation"
     >
       {navigationItems.map((item) => {

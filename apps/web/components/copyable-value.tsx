@@ -111,7 +111,7 @@ function CopyableValueControl({
         <span
           className={cn(
             presentation === "full" &&
-              "min-w-0 flex-1 overflow-x-auto whitespace-nowrap [mask-image:linear-gradient(to_right,black_85%,transparent)]",
+              "min-w-0 flex-1 overflow-x-auto pr-2 whitespace-nowrap",
           )}
         >
           {status === "copied" ? copiedLabel : shown}
