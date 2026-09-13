@@ -11,6 +11,7 @@ import {
   MoneyAmountDisplay,
   MoneyConfirmSummary,
   MoneyModal,
+  MoneyModalBody,
   MoneyModalFooter,
   MoneyModalHeader,
   MoneyNumpad,
@@ -213,7 +214,7 @@ export function SavingsMoneyDialog({
           closeLabel={`Close ${mode} dialog`}
         />
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
+        <MoneyModalBody className="gap-4 pt-4">
           {step === "amount" ? (
             <>
               <MoneyAmountDisplay
@@ -256,7 +257,7 @@ export function SavingsMoneyDialog({
               This {mode} expired. Go back and continue again.
             </StatusMessage>
           ) : null}
-        </div>
+        </MoneyModalBody>
 
         {step === "amount" ? (
           <MoneyModalFooter
