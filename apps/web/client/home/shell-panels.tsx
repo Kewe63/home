@@ -5,6 +5,7 @@ import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { FetchActivity } from "@/client/activity";
 import { AccountSettings } from "@/client/account/account-settings";
+import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import { PrimaryNavigation } from "@/components/primary-navigation";
 import {
   activityPanelId,
@@ -14,8 +15,8 @@ import {
   type ShellPanelId,
 } from "@/config/navigation";
 import type { RegionId, ResolutionSource } from "@/config/regions";
-import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
+import type { TransferAssetAvailability } from "@/shared/transfers/types";
 import { ActivityPage } from "./activity-panel";
 import { BalancesPage } from "./balances-panel";
 import { SavingsPanel, InvestPanel } from "./feature-panels";
@@ -43,6 +44,7 @@ export function DashboardShell({
   selectRegion,
   signOut,
   paintedAssetBalances,
+  sendAvailability,
   assetMarkResolution,
   activitySession,
   fetchActivity,
@@ -77,6 +79,7 @@ export function DashboardShell({
   selectRegion: (region: RegionId) => void;
   signOut: () => void;
   paintedAssetBalances: HomeAssetBalancesPresentation;
+  sendAvailability: readonly TransferAssetAvailability[];
   assetMarkResolution?: AssetMarkResolution;
   activitySession: VerifiedAccountSession | null;
   fetchActivity: FetchActivity;
@@ -149,6 +152,7 @@ export function DashboardShell({
                     assetBalances={paintedAssetBalances}
                     assetMarkResolution={assetMarkResolution}
                     activitySession={activitySession}
+                    sendAvailability={sendAvailability}
                     fetchActivity={fetchActivity}
                     fetchOperations={fetchOperations}
                     onOpenSave={() => navigateTo(savePanelId)}
@@ -191,6 +195,7 @@ export function DashboardShell({
               {mountedPanels.has(savePanelId) ? (
                 <MountedShellPanel active={activeNavigation === savePanelId}>
                   <SavingsPanel
+                    regionId={regionId}
                     isVerified={isVerified}
                     isChecking={isChecking}
                     content={savingsContent}

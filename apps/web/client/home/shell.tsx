@@ -48,8 +48,7 @@ import { useHomeRegion } from "./use-home-region";
 const loadingAssetBalances: HomeAssetBalancesPresentation = {
   status: "loading",
   displayTotal: null,
-  statusLabel: "Updating…",
-  items: [],
+  rows: [],
 };
 
 type HomeShellProps = HomeExperienceProps & {
@@ -67,6 +66,7 @@ export function HomeShell({
   initialPanel = "home",
   initialAccountSettingsOpen = false,
   assetBalances,
+  sendAvailability = [],
   assetMarkResolution,
   landingVisual,
   routeMode = "landing",
@@ -271,10 +271,10 @@ export function HomeShell({
   });
   const balancesReveal = useBalancesRevealWindow(
     balancesScope,
-    paintedAssetBalances.items,
+    paintedAssetBalances.rows,
     balancesRevealReset,
   );
-  const balancesListId = balancesListKey(paintedAssetBalances.items);
+  const balancesListId = balancesListKey(paintedAssetBalances.rows);
   const previousBalancesListIdRef = useRef(balancesListId);
   const previousNavigationRef = useRef(activeNavigation);
   useEffect(() => {
@@ -477,6 +477,7 @@ export function HomeShell({
           selectRegion={selectRegion}
           signOut={signOut}
           paintedAssetBalances={paintedAssetBalances}
+          sendAvailability={sendAvailability}
           assetMarkResolution={assetMarkResolution}
           activitySession={activitySession}
           fetchActivity={account.fetchActivity}

@@ -12,18 +12,18 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoneyTicker } from "@/components/money-ticker";
 import type { FetchActivity } from "@/client/activity";
-import { FundingActions } from "@/client/funding/funding-actions";
-import { TransferActions } from "@/client/transfers";
-import { previewHomeBalanceItems } from "@/client/portfolio";
 import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
+import { FundingActions } from "@/client/funding/funding-actions";
+import { SavingsTeaser } from "@/client/savings/savings-teaser";
+import { TransferActions } from "@/client/transfers";
+import { previewBalanceRows } from "@/shared/balances/present";
+import type { TransferAssetAvailability } from "@/shared/transfers/types";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
 import type { RegionId } from "@/config/regions";
-import { SavingsTeaser } from "@/client/savings/savings-teaser";
 import { ConnectedActivityPanel } from "./activity-panel";
 import { HomeBalancesList } from "./balances-panel";
 import type { HomeAssetBalancesPresentation } from "./home-types";
 import { ShimmerRows } from "./panel-shared";
-import { deriveSendAvailability } from "./send-availability";
 
 function SectionHeader({
   headingId,
@@ -53,6 +53,7 @@ export function HomePanel({
   assetBalances,
   assetMarkResolution,
   activitySession,
+  sendAvailability,
   fetchActivity,
   fetchOperations,
   onOpenSave,
@@ -67,6 +68,7 @@ export function HomePanel({
   assetBalances?: HomeAssetBalancesPresentation;
   assetMarkResolution?: AssetMarkResolution;
   activitySession: VerifiedAccountSession | null;
+  sendAvailability: readonly TransferAssetAvailability[];
   fetchActivity: FetchActivity;
   fetchOperations: (signal?: AbortSignal) => Promise<unknown>;
   onOpenSave: () => void;
@@ -86,13 +88,11 @@ export function HomePanel({
     : assetBalances?.status === "unavailable"
       ? "Balance unavailable"
       : "Total balance";
-  const balanceItems = assetBalances?.items ?? [];
+  const balanceRows = assetBalances?.rows ?? [];
   const balanceStatusLabel =
     assetBalances?.totalStatus === "partial" ? undefined : assetBalances?.statusLabel;
   const showBalanceStatus =
-    assetBalances?.status !== "loading" &&
-    balanceStatusLabel !== "Updating…" &&
-    Boolean(balanceStatusLabel);
+    assetBalances?.status !== "loading" && Boolean(balanceStatusLabel);
 
   return (
     <div className="space-y-4">
@@ -127,7 +127,7 @@ export function HomePanel({
         <TransferActions
           initialOpen={initialSendFlow}
           initialActionId={initialSendActionId}
-          availableAssets={deriveSendAvailability(balanceItems)}
+          availableAssets={sendAvailability}
         />
       </div>
 
@@ -142,7 +142,7 @@ export function HomePanel({
           </CardHeader>
           <CardContent className="px-2">
             <HomeBalancesList
-              items={previewHomeBalanceItems(balanceItems)}
+              rows={previewBalanceRows(balanceRows)}
               isLoading={isLoading}
               isUnavailable={assetBalances?.status === "unavailable"}
               assetMarkResolution={assetMarkResolution}

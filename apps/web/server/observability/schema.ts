@@ -72,7 +72,7 @@ export type ObservabilityEvent =
     }
   | {
       kind: "portfolio-balance-source";
-      route: string;
+      route: "/api/balances";
       source: "cdp-token-balances" | "configured-base-rpc";
       stage: "inventory";
       outcome: "incomplete" | "unavailable";

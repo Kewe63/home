@@ -13,10 +13,9 @@ import {
 } from "@/components/ui/item";
 import { MoneyTicker } from "@/components/money-ticker";
 import { useAccountWallet } from "@/client/account/cdp-client";
-import { activityOwnerKey } from "@/client/activity/use-activity";
+import { useBalances } from "@/client/balances";
+import { usePresentationRegionId } from "@/client/invest/presentation-quote";
 import {
-  ownerQueryKey,
-  ownerQueryMeta,
   publicQueryKey,
   useHomeQuery,
 } from "@/client/query/query-client";
@@ -26,11 +25,8 @@ import {
   BASE_USDC_DECIMALS,
   MORPHO_V1_CANDIDATE_ADDRESSES,
 } from "@/shared/savings/config";
-import {
-  isUsablePositionResult,
-  parsePositionResult,
-} from "@/shared/savings/contracts/positions";
 import { parseVaultsResult } from "@/shared/savings/contracts/vaults";
+import { selectVaultPositions } from "@/shared/balances/select";
 import { formatUsdStablecoinAmount } from "@/shared/formatting";
 import {
   nextSavingsRateExpiryAt,
@@ -50,9 +46,19 @@ const BASE_USDC_ASSET = {
 
 export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
   const account = useAccountWallet();
+  const region = usePresentationRegionId();
   const session = account.status === "verified" ? account.session : null;
-  const sessionAddress = session?.smartAccount?.address ?? null;
-  const sessionKey = session?.smartAccount ? activityOwnerKey(session) : null;
+  const sessionKey = session?.smartAccount ? session.smartAccount.address : null;
+  const balancesSession = session?.smartAccount
+    ? {
+        subject: session.user.subject,
+        smartAccountAddress: session.smartAccount.address,
+        chainId: session.smartAccount.chainId,
+        accountProvider: session.accountProvider,
+      }
+    : null;
+  const balances = useBalances(balancesSession, region, account.fetchBalances);
+  const positions = balances.snapshot ? selectVaultPositions(balances.snapshot) : null;
   const [rateNowMs, setRateNowMs] = useState(() => Date.now());
 
   const metadataQuery = useHomeQuery({
@@ -74,26 +80,6 @@ export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
       return data;
     },
   });
-  const positionsQuery = useHomeQuery({
-    queryKey: sessionKey
-      ? ownerQueryKey(sessionKey, "savings-positions")
-      : ["unauthenticated", "savings-positions-disabled"],
-    enabled: Boolean(sessionKey && sessionAddress),
-    staleTime: 15_000,
-    retry: false,
-    refetchOnWindowFocus: false,
-    meta: sessionKey ? ownerQueryMeta(sessionKey, "owner") : undefined,
-    queryFn: ({ signal }) => account.fetchSavingsPositions(signal),
-    select: (value) => {
-      if (!sessionAddress) throw new Error("Savings positions are unavailable.");
-      const data = parsePositionResult(value, sessionAddress);
-      if (!data || !isUsablePositionResult(data)) {
-        throw new Error("Savings positions are invalid.");
-      }
-      return data;
-    },
-  });
-
   useEffect(() => {
     const metadata = metadataQuery.data;
     if (!metadata) return;
@@ -108,17 +94,17 @@ export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
   }, [metadataQuery.data, rateNowMs]);
 
   const summary = useMemo(() => {
-    if (!metadataQuery.data || !positionsQuery.data) return null;
+    if (!metadataQuery.data || !positions) return null;
     return summarizeSavingsPortfolio({
       supportedVaultAddresses: MORPHO_V1_CANDIDATE_ADDRESSES,
       requiredAsset: metadataQuery.data.asset ?? BASE_USDC_ASSET,
       candidates: metadataQuery.data.candidates,
-      positions: positionsQuery.data.vaults,
+      positions,
       metadataFetchedAt: metadataQuery.data.source.fetchedAt,
       metadataStale: metadataQuery.data.stale,
       nowMs: rateNowMs,
     });
-  }, [metadataQuery.data, positionsQuery.data, rateNowMs]);
+  }, [metadataQuery.data, positions, rateNowMs]);
   const candidate = metadataQuery.data
     ? preferredSavingsCandidates(metadataQuery.data.candidates)[0] ?? null
     : null;
@@ -126,7 +112,7 @@ export function SavingsTeaser({ onOpen }: { onOpen: () => void }) {
   const sessionSettling = account.status === "restoring" || account.status === "validating";
   const loading = sessionSettling ||
     (!metadataQuery.data && !metadataQuery.isError) ||
-    Boolean(sessionKey && !positionsQuery.data && !positionsQuery.isError);
+    Boolean(sessionKey && balances.status === "loading");
 
   if (loading) return <ShimmerRows count={1} />;
 

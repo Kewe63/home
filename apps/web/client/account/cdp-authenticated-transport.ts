@@ -26,6 +26,7 @@ type MoneyActionApiFetch = (path: string, init?: RequestInit) => Promise<unknown
 
 const accountResourcePrefixes = [
   "/api/actions",
+  "/api/balances",
   "/api/trades",
   "/api/borrow",
   "/api/funding",
@@ -110,10 +111,8 @@ export function useAuthenticatedTransport({
   const fetchVerifiedResource = useCallback(
     async (
       endpoint:
-        | "/api/portfolio"
-        | "/api/portfolio/valuation"
+        | "/api/balances"
         | "/api/activity"
-        | "/api/savings/positions"
         | "/api/actions",
       signal?: AbortSignal,
       query?: string,
@@ -267,10 +266,10 @@ export function useAuthenticatedTransport({
     [fetchAccountResource],
   );
 
-  const fetchPortfolioValuation = useCallback(
+  const fetchBalances = useCallback(
     (region: import("@/config/regions").RegionId, signal?: AbortSignal) =>
       fetchVerifiedResource(
-        "/api/portfolio/valuation",
+        "/api/balances",
         signal,
         new URLSearchParams({ region }).toString(),
       ),
@@ -281,16 +280,9 @@ export function useAuthenticatedTransport({
       fetchVerifiedResource("/api/activity", signal, query),
     [fetchVerifiedResource],
   );
-  const fetchSavingsPositions = useCallback(
-    (signal?: AbortSignal) =>
-      fetchVerifiedResource("/api/savings/positions", signal),
-    [fetchVerifiedResource],
-  );
-
   return {
-    fetchPortfolioValuation,
+    fetchBalances,
     fetchActivity,
-    fetchSavingsPositions,
     fetchAccountResource,
     fetchMoneyActionApi,
     reset,

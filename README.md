@@ -65,7 +65,7 @@ Open `http://localhost:3000`. Public surfaces work without credentials.
 
 A secret shorter than 32 characters silently disables the Base Account button. Keep secrets server-side and out of Git.
 
-Actions require PostgreSQL through `DATABASE_URL`. The current action contract is [Home is thin](docs/home-is-thin.md): Home keeps one confirmed action record; the server authors calldata; the client dispatches through CDP or Base; provider and chain data determine status.
+Actions require PostgreSQL through `DATABASE_URL`. The current action contract is [Actions](docs/actions.md) under [Architecture](docs/architecture.md): Home keeps one confirmed action record; the server authors calldata; the client dispatches through CDP or Base; provider and chain data determine status.
 
 ### Useful commands
 

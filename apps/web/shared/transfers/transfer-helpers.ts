@@ -5,7 +5,6 @@ import {
   formatUnsignedTokenAmount,
   formatUsdStablecoinAmount,
 } from "@/shared/formatting";
-import type { PortfolioAssetBalance } from "@/shared/portfolio/types";
 import {
   TransferExecutionError,
   type TransferAsset,
@@ -142,16 +141,6 @@ export function assertTransferRequest(value: TransferRequest): void {
   readBaseUnits(value.amountBaseUnits, true);
 }
 
-export function findTransferBalance(
-  assets: PortfolioAssetBalance[],
-  assetId: TransferAssetId,
-): bigint {
-  const asset = assets.find((candidate) => candidate.id === assetId);
-  if (!asset) {
-    throw new TransferExecutionError("unavailable");
-  }
-  return readBaseUnits(asset.balanceBaseUnits);
-}
 
 export function encodeErc20Transfer(
   token: `0x${string}`,

@@ -55,36 +55,14 @@ export function shouldPersistOwnerQuery(query: Query, ownerKey: string, now = Da
     now - query.state.dataUpdatedAt <= ownerQueryCacheTtlMs;
 }
 
-function shouldPersistSanitizedValuation(query: Query, ownerKey: string, now: number): boolean {
-  const meta = query.meta as HomeQueryMeta | undefined;
-  return isSafeQueryIdentity(ownerKey) && meta?.ownerKey === ownerKey &&
-    query.queryKey[0] === ownerKey && query.queryKey[1] === "valuation" &&
-    query.state.status === "success" && now - query.state.dataUpdatedAt <= ownerQueryCacheTtlMs;
-}
-
 export function dehydrateOwnerQueries(
   queryClient: QueryClient,
   ownerKey: string,
   now = Date.now(),
 ): DehydratedState {
-  const state = dehydrate(queryClient, {
-    shouldDehydrateQuery: (query) =>
-      shouldPersistOwnerQuery(query, ownerKey, now) ||
-      shouldPersistSanitizedValuation(query, ownerKey, now),
+  return dehydrate(queryClient, {
+    shouldDehydrateQuery: (query) => shouldPersistOwnerQuery(query, ownerKey, now),
   });
-  return {
-    ...state,
-    queries: state.queries.map((query) => {
-      if (query.queryKey[0] !== ownerKey || query.queryKey[1] !== "valuation") return query;
-      const data = query.state.data;
-      if (!data || typeof data !== "object" || Array.isArray(data) || !("recognized" in data)) {
-        return query;
-      }
-      const persistedData = { ...data as Record<string, unknown> };
-      delete persistedData.recognized;
-      return { ...query, state: { ...query.state, data: persistedData } };
-    }),
-  };
 }
 
 export function ownerQueryStorageKey(ownerKey: string): string | null {
@@ -183,7 +161,7 @@ export function restoreOwnerQueries(
   const persister = createOwnerQueryPersister(storage, ownerKey);
   const persisted = persister?.restoreClient();
   persister?.cancel();
-  if (!persisted || persisted.buster !== "home-query-v1" || now - persisted.timestamp > ownerQueryCacheTtlMs) {
+  if (!persisted || persisted.buster !== "home-query-v2" || now - persisted.timestamp > ownerQueryCacheTtlMs) {
     if (persisted) persister?.removeClient();
     return false;
   }
@@ -210,7 +188,7 @@ export function OwnerQueryPersistence({ ownerKey }: { ownerKey: string | null })
     if (!persister) return;
     const persist = () => persister.persistClient({
       timestamp: Date.now(),
-      buster: "home-query-v1",
+      buster: "home-query-v2",
       clientState: dehydrateOwnerQueries(queryClient, ownerKey),
     });
     const unsubscribe = queryClient.getQueryCache().subscribe(persist);

@@ -35,6 +35,11 @@ describe("API route composition", () => {
     }
   });
 
+  test("gives the balances route a 30 second function budget", async () => {
+    const route = await loadRoute("balances/route.ts");
+    expect(route.maxDuration).toBe(30);
+  });
+
   test("keeps every public route dynamic and Node-only", async () => {
     for (const path of publicRoutes) {
       if (path === "savings/vaults/route.ts") continue; // pre-existing: static vault catalog
@@ -84,7 +89,7 @@ async function invokeRoute(
   verb: (typeof httpVerbs)[number],
 ): Promise<Response> {
   const handler = route[verb] as (request: Request, context: { params: Promise<Record<string, string>> }) => Promise<Response>;
-  const query = path === "portfolio/valuation/route.ts" ? "?region=US" : "";
+  const query = path === "balances/route.ts" ? "?region=US" : "";
   const request = new Request(`https://home.test/api/${routeUrlPath(path)}${query}`, {
     method: verb,
     ...(verb === "GET" || verb === "HEAD"
