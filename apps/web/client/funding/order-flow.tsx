@@ -469,7 +469,7 @@ function ProviderEconomicsReview({
 
 function DefinitionRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b py-3">
+    <div className="flex items-start justify-between gap-4 border-b py-3 last:border-b-0">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="text-right text-sm font-medium tabular-nums">
         <MoneyTicker value={value} />
@@ -529,28 +529,27 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
           {instruction.accountName ? (
             <p className="text-sm">Name: {instruction.accountName}</p>
           ) : null}
-          <div className="text-sm">
-            Account:{" "}
-            <CopyableValue
+          <dl>
+            <CopyDefinitionRow
+              label="Account"
               value={instruction.accountNumber}
               valueKind="account number"
             />
-          </div>
-          {instruction.alias ? (
-            <div className="text-sm">
-              Alias:{" "}
-              <CopyableValue value={instruction.alias} valueKind="alias" />
-            </div>
-          ) : null}
-          {instruction.reference ? (
-            <div className="text-sm">
-              Reference:{" "}
-              <CopyableValue
+            {instruction.alias ? (
+              <CopyDefinitionRow
+                label="Alias"
+                value={instruction.alias}
+                valueKind="alias"
+              />
+            ) : null}
+            {instruction.reference ? (
+              <CopyDefinitionRow
+                label="Reference"
                 value={instruction.reference}
                 valueKind="reference"
               />
-            </div>
-          ) : null}
+            ) : null}
+          </dl>
           <MoneyLine
             value={`Send exactly ${formatFiatAmount(instruction.amount, instruction.currency)}`}
           />
@@ -581,12 +580,42 @@ function InstructionView({ instruction }: { instruction: Instruction }) {
     <section>
       <div className="flex flex-col gap-2">
         <h4 className="text-sm font-medium">{instruction.scheme}</h4>
-        <CopyableValue value={instruction.key} valueKind="payment key" />
+        <dl>
+          <CopyDefinitionRow
+            label="Payment key"
+            value={instruction.key}
+            valueKind="payment key"
+          />
+        </dl>
         <MoneyLine
           value={`Pay exactly ${formatFiatAmount(instruction.amount, instruction.currency)}`}
         />
       </div>
     </section>
+  );
+}
+
+function CopyDefinitionRow({
+  label,
+  value,
+  valueKind,
+}: {
+  label: string;
+  value: string;
+  valueKind: string;
+}) {
+  return (
+    <div className="grid items-start gap-1 border-b py-3 text-sm last:border-b-0 sm:grid-cols-[minmax(7rem,0.65fr)_minmax(0,1.35fr)] sm:gap-3">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 sm:text-right">
+        <CopyableValue
+          value={value}
+          presentation="full"
+          valueKind={valueKind}
+          className="sm:justify-end"
+        />
+      </dd>
+    </div>
   );
 }
 

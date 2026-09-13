@@ -6,7 +6,6 @@ import { useEffect, useRef, useState, type ComponentProps, type ReactNode, useMe
 import { LoaderCircle } from "lucide-react";
 import { AddressField } from "@/components/address";
 import { CopyableValue } from "@/components/copyable-value";
-import { formatAddress } from "@/shared/formatting";
 import type { AccountWalletClient } from "@/client/account/cdp-client";
 import {
   MoneyAmountDisplay,
@@ -209,7 +208,7 @@ export function SendDialog({
         </div> : null}
         {request && requestAsset && (step === "confirm" || step === "pending" || step === "error") ? <>
           <MoneyConfirmSummary amount={confirmAmount} lead={`You're sending ${requestAsset.symbol}`} rows={[
-            { label: "To", value: <CopyableValue value={request.recipient} display={formatAddress(request.recipient)} valueKind="address" /> },
+            { label: "To", value: <CopyableValue value={request.recipient} presentation="full" valueKind="address" className="sm:justify-end" />, fullValue: true },
             { label: "Asset", value: requestAsset.symbol },
             { label: "Network", value: "Base" },
           ]} />

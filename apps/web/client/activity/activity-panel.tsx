@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Alert,
   AlertAction,
@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { ItemGroup, ItemSeparator } from "@/components/ui/item";
+import { ItemGroup } from "@/components/ui/item";
 import { MoneyTicker } from "@/components/money-ticker";
 import { ActivityRow } from "@/components/finance-rows";
 import { TransactionDetailsModal } from "@/components/transaction-details";
@@ -19,6 +19,7 @@ import {
   presentActivityTransferRow,
 } from "./activity-presenter";
 import { useActivity } from "./use-activity";
+import { ShimmerRows } from "@/client/home/panel-shared";
 import {
   ACTIVITY_TEASER_LIMIT,
   type ActivityDirection,
@@ -70,12 +71,8 @@ export function ActivityPanel({
   if (activity.status === "loading") {
     return (
       <ActivitySurface heading={heading} leading={leading} labelledBy={labelledBy} label={labelled} busy>
-        <Alert role="status" className="border-0 bg-transparent px-0 text-muted-foreground">
-          <AlertDescription className="flex items-center gap-2 text-inherit">
-            <ActivitySpinner />
-            Loading recent activity…
-          </AlertDescription>
-        </Alert>
+        <ShimmerRows count={density === "teaser" ? 2 : 4} />
+        <span className="sr-only">Loading recent activity…</span>
       </ActivitySurface>
     );
   }
@@ -108,15 +105,13 @@ export function ActivityPanel({
       ) : (
         <ItemGroup className="gap-0">
           <ol className="list-none p-0">
-            {visibleTransfers.map((transfer, index) => (
-              <Fragment key={transfer.id}>
-                {index > 0 ? <li aria-hidden="true"><ItemSeparator /></li> : null}
-                <TransferActivityRow
-                  transfer={transfer}
-                  regionId={regionId}
-                  onActivate={() => setSelectedTransfer(transfer)}
-                />
-              </Fragment>
+            {visibleTransfers.map((transfer) => (
+              <TransferActivityRow
+                key={transfer.id}
+                transfer={transfer}
+                regionId={regionId}
+                onActivate={() => setSelectedTransfer(transfer)}
+              />
             ))}
           </ol>
         </ItemGroup>
@@ -215,12 +210,10 @@ function ActivityPagination({
   return (
     <div className="space-y-2">
       {loading ? (
-        <Alert role="status" aria-live="polite" className="min-h-11 justify-center border-0 bg-transparent p-0 text-muted-foreground">
-          <AlertDescription className="flex items-center justify-center gap-2 text-inherit">
-            <ActivitySpinner />
-            Loading more activity…
-          </AlertDescription>
-        </Alert>
+        <div role="status" aria-live="polite">
+          <ShimmerRows count={1} />
+          <span className="sr-only">Loading more activity…</span>
+        </div>
       ) : null}
       {failed ? (
         <p className="text-xs text-destructive" role="alert">
@@ -252,15 +245,6 @@ function ActivityEmpty() {
         <EmptyTitle>No activity yet</EmptyTitle>
       </EmptyHeader>
     </Empty>
-  );
-}
-
-function ActivitySpinner() {
-  return (
-    <span
-      className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary/20 border-t-primary motion-reduce:animate-none"
-      aria-hidden="true"
-    />
   );
 }
 

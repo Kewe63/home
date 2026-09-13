@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, CircleQuestionMark, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ItemGroup, ItemSeparator } from "@/components/ui/item";
+import { ItemGroup } from "@/components/ui/item";
 import { MoneyTicker } from "@/components/money-ticker";
 import { ActivityRow } from "@/components/finance-rows";
 import { TransactionDetailsModal } from "@/components/transaction-details";
@@ -75,11 +75,12 @@ export function RecentMoneyActions({
     ) : (
       <ItemGroup className="gap-0">
         <ol className="list-none p-0">
-          {operations.map((operation, index) => (
-            <Fragment key={operation.action.id}>
-              {index > 0 ? <li aria-hidden="true"><ItemSeparator /></li> : null}
-              <OperationRow operation={operation} onActivate={() => setSelected(operation)} />
-            </Fragment>
+          {operations.map((operation) => (
+            <OperationRow
+              key={operation.action.id}
+              operation={operation}
+              onActivate={() => setSelected(operation)}
+            />
           ))}
         </ol>
       </ItemGroup>
