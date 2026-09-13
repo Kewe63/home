@@ -40,8 +40,8 @@
 }
 
 .otpInput {
-  font-family: var(--font-mono);
   font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
   letter-spacing: 0.24em;
   text-align: center;

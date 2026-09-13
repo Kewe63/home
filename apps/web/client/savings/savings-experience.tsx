@@ -394,7 +394,7 @@ export function SavingsExperience({
         ) : availableBalance ? (
           <>
             <p
-              className={`${styles.heroAmount} text-amount font-mono ${funded ? "" : styles.heroAmountEmpty}`.trim()}
+              className={`${styles.heroAmount} text-amount tabular-nums ${funded ? "" : styles.heroAmountEmpty}`.trim()}
             >
               <MoneyTicker
                 value={formatUsdStablecoinAmount(
@@ -441,7 +441,7 @@ export function SavingsExperience({
         ) : !sessionKey ? (
           <>
             <p
-              className={`${styles.heroAmount} ${styles.heroAmountEmpty} text-amount font-mono`}
+              className={`${styles.heroAmount} ${styles.heroAmountEmpty} text-amount tabular-nums`}
             >
               <MoneyTicker value="$0.00" />
             </p>
@@ -457,7 +457,7 @@ export function SavingsExperience({
           </>
         ) : (
           <>
-            <p className={`${styles.heroAmount} text-amount font-mono`}>
+            <p className={`${styles.heroAmount} text-amount tabular-nums`}>
               <MoneyTicker value="—" />
             </p>
             <p
@@ -542,7 +542,7 @@ export function SavingsExperience({
                           </ItemDescription>
                         ) : null}
                       </ItemContent>
-                      <ItemActions className="text-row-value justify-end text-right font-mono">
+                      <ItemActions className="text-row-value justify-end text-right tabular-nums">
                         {rowValue}
                       </ItemActions>
                     </Item>

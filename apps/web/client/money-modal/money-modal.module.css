@@ -157,8 +157,8 @@
   visibility: hidden;
   pointer-events: none;
   white-space: nowrap;
-  font-family: var(--font-mono);
   font-size: var(--money-amount-base-size);
+  font-variant-numeric: tabular-nums;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: -0.06em;

@@ -21,7 +21,7 @@ export function MoneyConfirmSummary({
   return (
     <>
       <div className={styles.confirmAmount}>
-        <div className={`${styles.confirmFigure} font-mono text-amount font-semibold`}>
+        <div className={`${styles.confirmFigure} tabular-nums text-amount font-semibold`}>
           <MoneyTicker value={amount} />
         </div>
         <p className={`${styles.confirmLead} text-caption text-muted-foreground`}>{lead}</p>

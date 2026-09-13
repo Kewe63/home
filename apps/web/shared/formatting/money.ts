@@ -92,9 +92,9 @@ const regionLocales = {
 } as const satisfies Record<RegionId, string>;
 
 export const MONEY_CHANGE_COLOR_TOKENS = {
-  positive: "var(--home-positive)",
-  negative: "var(--home-negative)",
-  neutral: "var(--home-text-muted)",
+  positive: "var(--market-gain)",
+  negative: "var(--market-loss)",
+  neutral: "var(--muted-foreground)",
 } as const;
 
 export type MoneyChangeTone = keyof typeof MONEY_CHANGE_COLOR_TOKENS;

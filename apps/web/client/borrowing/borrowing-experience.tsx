@@ -579,7 +579,7 @@ function BorrowExperienceInner({
             <strong className="text-row-label">
               {preview.response.preview.title}
             </strong>
-            <span className="text-row-value font-mono">
+            <span className="text-row-value tabular-nums">
               <MoneyTicker
                 value={formatPresentationTokenAmount(
                   preview.response.preview.amount.amountBaseUnits,
@@ -643,7 +643,7 @@ function Metric({
           <ItemDescription className="text-caption">{note}</ItemDescription>
         ) : null}
       </ItemContent>
-      <ItemActions className="text-row-value justify-start text-left font-mono sm:max-w-[45%] sm:justify-end sm:text-right">
+      <ItemActions className="text-row-value justify-start text-left tabular-nums sm:max-w-[45%] sm:justify-end sm:text-right">
         {money ? <MoneyTicker value={value} /> : value}
       </ItemActions>
     </Item>

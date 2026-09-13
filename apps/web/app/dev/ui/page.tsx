@@ -42,12 +42,12 @@ export default function UiThemePreviewPage() {
 
       <section className="grid gap-3">
         <div className="text-section-title font-semibold">Type roles</div>
-        <div className="text-amount font-mono">$1,234.56</div>
+        <div className="text-amount tabular-nums">$1,234.56</div>
         <div className="text-page-title">Page title</div>
         <div className="text-sheet-title">Sheet title</div>
         <div className="text-section-title">Section title</div>
         <div className="text-row-label">Row label</div>
-        <div className="text-row-value font-mono">1,234.56 USDC</div>
+        <div className="text-row-value tabular-nums">1,234.56 USDC</div>
         <div className="text-body">Body copy</div>
         <div className="text-caption text-muted-foreground">Secondary copy</div>
         <div className="text-metadata text-muted-foreground">Metadata</div>

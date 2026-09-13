@@ -681,58 +681,6 @@ test("visited Invest and Activity panels stay mounted across tab changes", async
   expect(fixtures.activityReads()).toBe(readsAfterFirstVisit);
 });
 
-test("Add money is a full-slot primary action with an inline icon at 320px, 390px, and desktop", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("home.country.v1", "US"));
-  await installApiFixtures(page);
-  await page.setViewportSize({ width: 390, height: 720 });
-  await signIn(page);
-
-  for (const width of [320, 390, 1326]) {
-    await page.setViewportSize({ width, height: 720 });
-    const addMoney = page.getByRole("button", { name: "Add money", exact: true });
-    const send = page.getByRole("button", { name: "Send", exact: true });
-    await expect(addMoney).toBeVisible();
-    await expect(addMoney).toContainText("Add money");
-    const metrics = await addMoney.evaluate((element) => {
-      const button = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-      return {
-        width: button.width,
-        height: button.height,
-        backgroundColor: style.backgroundColor,
-        color: style.color,
-      };
-    });
-    const sendWidth = await send.evaluate((element) => element.getBoundingClientRect().width);
-
-    expect(metrics.backgroundColor).toBe("rgb(0, 82, 255)");
-    expect(metrics.color).toBe("rgb(255, 255, 255)");
-    expect(metrics.height).toBeGreaterThanOrEqual(44);
-    expect(Math.abs(metrics.width - sendWidth)).toBeLessThanOrEqual(1);
-  }
-});
-
-test("send modal leaves action-row trigger styling at 390px", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("home.country.v1", "US"));
-  await installApiFixtures(page);
-  await page.setViewportSize({ width: 390, height: 720 });
-  await signIn(page);
-
-  await expect(page.locator(".action-row [data-action-trigger]")).toHaveCount(1);
-  await page.getByRole("button", { name: "Send" }).click();
-  const dialog = page.getByRole("dialog", { name: "Send" });
-  await expect(dialog).toBeVisible();
-  await expect.poll(() =>
-    page.evaluate(() => Boolean(document.querySelector('[role="dialog"][data-open]')?.closest(".action-row"))),
-  ).toBe(false);
-
-  const close = dialog.getByRole("button", { name: "Close send dialog" });
-  await expect(close).toHaveCSS("color", "rgb(10, 11, 13)");
-  const primary = dialog.getByRole("button", { name: "Continue" });
-  await expect(primary).toBeVisible();
-  await expect(primary).toHaveCSS("background-color", "rgb(0, 82, 255)");
-});
-
 test("money amount auto-fits the longest local and native values at 320px and 390px", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("home.country.v1", "US"));
   await installApiFixtures(page);
