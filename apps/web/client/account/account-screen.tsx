@@ -20,7 +20,6 @@ import {
   BaseAccountOnlySignIn,
 } from "./sign-in-base-account";
 import { SignInBlockedPanel, SignInStatus } from "./sign-in-shell";
-import styles from "./account.module.css";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -285,8 +284,8 @@ export function AccountSignInSheet({
             <SignInBlockedPanel reason={signInAvailability === "provider-unavailable" ? "provider-unavailable" : "unconfigured"} />
           ) : (
             <>
-              {message ? <StatusMessage className={styles.message}>{message}</StatusMessage> : null}
-              {authError ? <StatusMessage className={styles.message} tone="error" role="alert">{authError}</StatusMessage> : null}
+              {message ? <StatusMessage className="mt-6">{message}</StatusMessage> : null}
+              {authError ? <StatusMessage className="mt-6" tone="error" role="alert">{authError}</StatusMessage> : null}
               <SignInStatus
                 phase={isProviderHandoff ? null : activeBaseAccountPhase}
                 cleaningUp={isCleaningUp}

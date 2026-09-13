@@ -5,6 +5,7 @@ import { Fragment, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DrawerFooter } from "@/components/ui/drawer";
 import {
   Item,
   ItemActions,
@@ -29,7 +30,6 @@ import {
 } from "@/config/regions";
 import { formatAddress } from "@/shared/formatting";
 import { MoneyModal, MoneyModalHeader } from "@/client/money-modal";
-import modal from "@/client/money-modal/money-modal.module.css";
 import { ReceiveQr } from "./receive-qr";
 import {
   FundingOrderFlow,
@@ -122,14 +122,14 @@ export function AddMoneyDialog({
       ) : null}
 
       {signedOut ? (
-        <div className={modal.footer}>
+        <DrawerFooter className="pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Link
             className={buttonVariants({ size: "lg" })}
             href="/?account=signin"
           >
             Sign in
           </Link>
-        </div>
+        </DrawerFooter>
       ) : null}
     </MoneyModal>
   );
@@ -147,7 +147,7 @@ export function MethodBody({
   onSelectBinding: (binding: FundingBinding) => void;
 }) {
   return (
-    <div className={modal.body}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">
       <ItemGroup>
         <Item
           variant="outline"
@@ -224,7 +224,7 @@ export function ReceiveBody({
 }) {
   return (
     <div
-      className={`${modal.body} items-center gap-4 pt-2 pb-[env(safe-area-inset-bottom)]`}
+      className="flex min-h-0 flex-1 flex-col overflow-auto p-4 items-center gap-4 pt-2 pb-[env(safe-area-inset-bottom)]"
     >
       <Badge variant="secondary">Receive on Base</Badge>
       <div className="aspect-square w-full max-w-56 overflow-hidden rounded-xl border bg-background">
@@ -368,7 +368,7 @@ function supportedRegionalAsset(
 
 function SignedOutBody() {
   return (
-    <div className={modal.body}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4">
       <p className="text-sm text-muted-foreground">
         Sign in and verify a Base account before showing a funding address.
       </p>

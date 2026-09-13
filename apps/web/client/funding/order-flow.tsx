@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DrawerFooter } from "@/components/ui/drawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,6 @@ import {
   MoneyNumpad,
   type MoneyAmountChangeSource,
 } from "@/client/money-modal";
-import modal from "@/client/money-modal/money-modal.module.css";
 import {
   ownerQueryKey,
   ownerQueryMeta,
@@ -223,7 +223,7 @@ export function FundingOrderFlow({
   );
   return (
     <>
-      <div className={`${modal.body} flex flex-col gap-4`}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 flex flex-col gap-4">
         {binding.paymentMethods.length > 1 ? (
           <Field>
             <FieldLabel htmlFor="funding-payment-method">
@@ -359,7 +359,7 @@ function QuoteReview({
   );
   return (
     <>
-      <div className={`${modal.body} flex flex-col gap-4`}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>
@@ -433,7 +433,7 @@ function ProviderEconomicsReview({
   );
   return (
     <>
-      <div className={`${modal.body} flex flex-col gap-4`}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 flex flex-col gap-4">
         <Card>
           <CardHeader>
             <CardTitle>
@@ -486,7 +486,7 @@ function OrderStatus({
   const copy = stateCopy(order.state);
   return (
     <>
-      <div className={`${modal.body} flex flex-col gap-4`}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto p-4 flex flex-col gap-4">
         <h3 className="text-lg font-semibold">{copy.title}</h3>
         <FundingNotice>{copy.body}</FundingNotice>
         {order.instructions ? (
@@ -499,11 +499,11 @@ function OrderStatus({
         ) : null}
       </div>
       {order.state !== "dispatch-ambiguous" ? (
-        <div className={modal.footer}>
+        <DrawerFooter className="pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Button variant="ghost" onClick={onBack}>
             Back
           </Button>
-        </div>
+        </DrawerFooter>
       ) : null}
     </>
   );
