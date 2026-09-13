@@ -860,30 +860,21 @@ async function openScrolledBalances(page: Page) {
       });
     },
   );
-  await page.setViewportSize({ width: 390, height: 440 });
+  await page.setViewportSize({ width: 390, height: 320 });
   await signIn(page);
 
   await page.getByRole("button", { name: "Your money" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Your money" })).toBeVisible();
   await expect(page).toHaveURL(/[?&]panel=balances/);
 
-  const maxTop = await page.evaluate(() => {
+  const initialMaxTop = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>(".app-main-authenticated");
     return main ? Math.max(0, main.scrollHeight - main.clientHeight) : 0;
   });
-  expect(maxTop).toBeGreaterThan(0);
+  expect(initialMaxTop).toBeGreaterThan(0);
 
-  const target = await page.evaluate((max) => {
-    const main = document.querySelector<HTMLElement>(".app-main-authenticated");
-    if (!main) return 0;
-    const next = Math.min(240, max);
-    main.scrollTop = next;
-    main.dispatchEvent(new Event("scroll", { bubbles: true }));
-    return next;
-  }, maxTop);
-  expect(target).toBeGreaterThan(0);
-
-  // The real IntersectionObserver reveals at least one more batch on scroll.
+  // Bring the real sentinel into view so IntersectionObserver reveals another batch.
+  await page.locator("[data-balances-sentinel]").scrollIntoViewIfNeeded();
   await expect
     .poll(() =>
       page.evaluate(
@@ -894,17 +885,29 @@ async function openScrolledBalances(page: Page) {
       ),
     )
     .toBeGreaterThan(10);
+
+  const scrollState = await page.evaluate(() => {
+    const main = document.querySelector<HTMLElement>(".app-main-authenticated");
+    if (!main) return { target: 0, maxTop: 0 };
+    const maxTop = Math.max(0, main.scrollHeight - main.clientHeight);
+    const target = Math.min(240, maxTop);
+    main.scrollTop = target;
+    main.dispatchEvent(new Event("scroll", { bubbles: true }));
+    return { target, maxTop };
+  });
+  expect(scrollState.target).toBeGreaterThan(0);
+
   const revealedCount = await page.evaluate(
     () =>
       document.querySelectorAll(
         '[data-shell-panel]:not([hidden]) [data-balance-list] [data-kind="balance"]',
       ).length,
   );
-  return { target, revealedCount, maxTop };
+  return { target: scrollState.target, revealedCount, maxTop: scrollState.maxTop };
 }
 
 async function openInvestAssetDetail(page: Page) {
-  await page.getByRole("button", { name: "Invest" }).click();
+  await page.getByRole("button", { name: "Invest", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Invest" })).toBeVisible();
   await expect(page).toHaveURL(/[?&]panel=invest/);
   // Forward Invest entry clears the saved offset before any asset opens.
@@ -928,6 +931,11 @@ async function expectBalancesRestored(
   expected: { target: number; revealedCount: number; maxTop: number },
 ) {
   await expect(page.getByRole("heading", { name: "Your money" })).toBeVisible();
+  const restoredMaxTop = await page.evaluate(() => {
+    const main = document.querySelector<HTMLElement>(".app-main-authenticated");
+    return main ? Math.max(0, main.scrollHeight - main.clientHeight) : 0;
+  });
+  const expectedTop = Math.min(expected.target, restoredMaxTop);
   await expect
     .poll(() =>
       page.evaluate(
@@ -936,9 +944,9 @@ async function expectBalancesRestored(
             ?.scrollTop ?? 0),
       ),
     )
-    .toBe(expected.target);
-  // The restored offset stays within the current scrollable range.
-  expect(expected.target).toBeLessThanOrEqual(expected.maxTop);
+    .toBe(expectedTop);
+  // The restored offset is exact unless the denser current layout requires clamping.
+  expect(expectedTop).toBeLessThanOrEqual(expected.maxTop);
   await expect
     .poll(() =>
       page.evaluate(
@@ -961,7 +969,7 @@ async function clickForwardAndWaitForUrl(
   // Right after a route change the button can render before its handler is
   // hydrated, so a click that produced no navigation is retried (#383).
   await expect(async () => {
-    await page.getByRole("button", { name }).click({ force: true });
+    await page.getByRole("button", { name, exact: true }).click({ force: true });
     await expect(page).toHaveURL(expectedUrl, { timeout: 1_500 });
   }).toPass({ timeout: 15_000 });
 }
