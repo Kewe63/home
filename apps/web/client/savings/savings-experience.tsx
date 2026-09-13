@@ -66,6 +66,7 @@ import {
   publicQueryKey,
   useHomeQuery,
 } from "@/client/query/query-client";
+import { deploymentHeaders } from "@/client/query/deployment-headers";
 import { activityOwnerKey } from "@/client/activity/use-activity";
 import { useOptionalHomeShellRouting } from "@/client/home/panel-routing";
 import { markHomePerformance } from "@/client/observability/perf-marks";
@@ -794,7 +795,7 @@ function collectVaultBalances(
 
 async function fetchSavingsVaults(signal?: AbortSignal): Promise<unknown> {
   const response = await fetch("/api/savings/vaults", {
-    headers: { accept: "application/json" },
+    headers: { ...deploymentHeaders(), accept: "application/json" },
     signal,
   });
   if (!response.ok) throw new Error("Vault request failed");

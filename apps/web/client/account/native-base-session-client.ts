@@ -1,3 +1,4 @@
+import { deploymentHeaders } from "@/client/query/deployment-headers";
 import {
   ACCOUNT_PROVIDER_HEADER,
   type VerifiedAccountSession,
@@ -33,6 +34,7 @@ export async function restoreNativeBaseSession(
     response = await fetchImpl("/api/session", {
       method: "GET",
       headers: {
+        ...deploymentHeaders(),
         Accept: "application/json",
         [ACCOUNT_PROVIDER_HEADER]: "base-account",
       },
@@ -53,7 +55,11 @@ export async function requestNativeBaseChallenge(
 ): Promise<{ flowId: string; message: string }> {
   const response = await fetchImpl("/api/auth/base/nonce", {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: {
+      ...deploymentHeaders(),
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ address }),
     cache: "no-store",
     credentials: "same-origin",
@@ -75,7 +81,11 @@ export async function verifyNativeBaseChallenge(
 ): Promise<VerifiedAccountSession> {
   const response = await fetchImpl("/api/auth/base/verify", {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: {
+      ...deploymentHeaders(),
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ message, signature }),
     cache: "no-store",
     credentials: "same-origin",
@@ -91,6 +101,9 @@ export async function verifyNativeBaseChallenge(
 export async function clearNativeBaseSession(
   fetchImpl: NativeBaseFetch = fetch,
 ): Promise<void> {
+  // Never pin sign-out to the serving deployment. Logout only clears cookies
+  // and is valid on any deployment; a pinned request from a tab older than the
+  // Skew Protection max age would 404 and leave the user unable to sign out.
   const response = await fetchImpl("/api/auth/base/logout", {
     method: "POST",
     headers: { Accept: "application/json" },

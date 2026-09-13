@@ -2,6 +2,7 @@
 
 import { keepPreviousData } from "@tanstack/react-query";
 import { publicQueryKey, useHomeQuery } from "@/client/query/query-client";
+import { deploymentHeaders } from "@/client/query/deployment-headers";
 import {
   parseHistoryResponse,
   type MarketPriceHistoryPoint,
@@ -30,7 +31,11 @@ export function usePriceHistory(assetId: string, range: MarketPriceRange): Price
     queryFn: async ({ signal }) => {
       const response = await fetch(
         `${HISTORY_ENDPOINT}?assetId=${encodeURIComponent(assetId)}&range=${encodeURIComponent(range)}`,
-        { headers: { accept: "application/json" }, cache: "no-store", signal },
+        {
+          headers: { ...deploymentHeaders(), accept: "application/json" },
+          cache: "no-store",
+          signal,
+        },
       );
       const payload = parseHistoryResponse(await response.json());
       if (!payload || payload.assetId !== assetId || payload.range !== range) {

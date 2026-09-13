@@ -1,4 +1,5 @@
 import { recordAuthDiagnostic } from "./auth-diagnostics";
+import { deploymentHeaders } from "@/client/query/deployment-headers";
 import { parseSession } from "@/shared/account/contracts/session";
 import {
   ACCOUNT_PROVIDER_HEADER,
@@ -65,6 +66,7 @@ export async function validateAccountSession(
     response = await fetchImplementation("/api/session", {
       method: "GET",
       headers: {
+        ...deploymentHeaders(),
         Accept: "application/json",
         ...(authentication === "cdp"
           ? { Authorization: `Bearer ${accessToken}` }

@@ -11,6 +11,10 @@ import { ACCOUNT_PROVIDER_HEADER } from "@/shared/account/session-types";
 import { TransferExecutionError } from "@/shared/transfers/types";
 import { browserHomeQueryClient, useHomeQueryClient } from "@/client/query/query-client";
 import {
+  deploymentHeaders,
+  throwIfDeploymentExpired,
+} from "@/client/query/deployment-headers";
+import {
   applyActionHandleEffects,
   createBalanceFreshnessState,
   resetBalanceFreshness,
@@ -122,6 +126,7 @@ export function useAuthenticatedTransport({
         throw new Error("Authenticated resource is unavailable.");
       }
 
+      const skewHeaders = deploymentHeaders();
       let response: Response;
       try {
         response = await (sessionFetch ?? fetch)(
@@ -129,6 +134,7 @@ export function useAuthenticatedTransport({
           {
             method: "GET",
             headers: {
+              ...skewHeaders,
               Accept: "application/json",
               ...(authentication === "cdp" ? { Authorization: `Bearer ${accessToken}` } : {}),
               [ACCOUNT_PROVIDER_HEADER]: session.accountProvider,
@@ -149,6 +155,7 @@ export function useAuthenticatedTransport({
         } catch {
           // Fixed-endpoint callers only need the bounded status/code seam.
         }
+        throwIfDeploymentExpired(response, skewHeaders, details.code);
         const unavailable = new Error("Authenticated resource is unavailable.");
         Object.assign(unavailable, { status: response.status, ...details });
         throw unavailable;
@@ -190,11 +197,13 @@ export function useAuthenticatedTransport({
       if (method === "GET" && options.body !== undefined) {
         throw new TransferExecutionError("invalid-request");
       }
+      const skewHeaders = deploymentHeaders();
       let response: Response;
       try {
         response = await (sessionFetch ?? fetch)(safePath, {
           method,
           headers: {
+            ...skewHeaders,
             Accept: "application/json",
             ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
             ...(authentication === "cdp" ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -219,6 +228,7 @@ export function useAuthenticatedTransport({
         } catch {
           // Money-action callers only need the bounded status/code seam.
         }
+        throwIfDeploymentExpired(response, skewHeaders, details.code);
         const failure = new TransferExecutionError(
           response.status === 409 ? "submission-pending" : "unavailable",
         );
