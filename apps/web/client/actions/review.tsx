@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MoneyTicker } from "@/components/money-ticker";
 import { useAccountWallet } from "@/client/account/cdp-client";
 import {
@@ -71,9 +71,9 @@ function MoneyActionReviewContent({
   return (
     <Card className="mx-auto mt-4 w-full max-w-3xl" aria-labelledby={`money-action-${action.id}`}>
       <CardHeader>
-        <CardTitle id={`money-action-${action.id}`} className="text-lg font-semibold">
+        <h2 id={`money-action-${action.id}`} data-slot="card-title" className="text-lg leading-snug font-semibold">
           {action.title}
-        </CardTitle>
+        </h2>
       </CardHeader>
       <CardContent className="grid gap-4">
         <dl className="m-0 grid border-t">
