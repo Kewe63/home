@@ -31,7 +31,6 @@ import {
 } from "@/shared/transfers/transfer-helpers";
 import {
   TransferExecutionError,
-  type ConfirmedTransfer,
   type TransferAssetAvailability,
   type TransferRequest,
 } from "@/shared/transfers/types";
@@ -51,7 +50,6 @@ export function SendDialog({
   resumeActionId = null,
   onReview,
   onInvalidResume,
-  onConfirmed,
   onClose,
   onClosed,
 }: {
@@ -66,7 +64,6 @@ export function SendDialog({
   immediate?: boolean;
   onReview?: (actionId: string) => void;
   onInvalidResume?: () => void;
-  onConfirmed?: (transfer: ConfirmedTransfer) => void;
   onClose: () => void;
   onClosed?: () => void;
 }) {
@@ -170,10 +167,7 @@ export function SendDialog({
     if (!action || !request) return;
     setStep("pending"); setError(null);
     try {
-      const result = await executeMoneyAction(action);
-      if (result.status === "confirmed" && result.transactionHash) {
-        onConfirmed?.({ ...request, transactionHash: result.transactionHash });
-      }
+      await executeMoneyAction(action);
       reset();
       onClose();
     } catch (caught) {
