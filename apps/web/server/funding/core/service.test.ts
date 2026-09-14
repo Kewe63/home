@@ -22,6 +22,7 @@ function setup(
   const getOrderSandboxes: boolean[] = [];
   let observation: "awaiting-payment" | "sent" = "awaiting-payment";
   let date = new Date("2026-09-12T00:00:00.000Z");
+  const staleSignals: Array<{ address: string; at: string }> = [];
   const provider: FundingProvider = {
     manifest: options.providerSandbox ? { ...manifest, sandbox: true } : manifest,
     async createOrder(input, ctx) {
@@ -35,8 +36,8 @@ function setup(
       return { state: observation, providerStatus: observation, transactionHash: observation === "sent" ? `0x${"2".repeat(64)}` : null };
     },
   };
-  const core = new FundingCore({ providers: [provider], store: new MemoryFundingOrderStore(), env: { FIXTURE_KEY: "set", FUNDING_QUOTE_SECRET: "s".repeat(32), ...(options.sandbox ? { FUNDING_SANDBOX: "1" } : {}) }, currentBaseBlock: async () => { blockReads += 1; return "500"; }, verifyReceipt: async (_order, hash) => { receiptVerifications += 1; return { transactionHash: hash, logIndex: 4 }; }, now: () => date });
-  return { core, dispatches: () => dispatches, blockReads: () => blockReads, receiptVerifications: () => receiptVerifications, getOrderSandboxes: () => getOrderSandboxes, advance(minutes: number) { date = new Date(date.getTime() + minutes * 60_000); }, sent() { observation = "sent"; date = new Date("2026-09-12T00:00:10.000Z"); } };
+  const core = new FundingCore({ providers: [provider], store: new MemoryFundingOrderStore(), env: { FIXTURE_KEY: "set", FUNDING_QUOTE_SECRET: "s".repeat(32), ...(options.sandbox ? { FUNDING_SANDBOX: "1" } : {}) }, currentBaseBlock: async () => { blockReads += 1; return "500"; }, verifyReceipt: async (_order, hash) => { receiptVerifications += 1; return { transactionHash: hash, logIndex: 4 }; }, markStale: async (address, at) => { staleSignals.push({ address, at: at.toISOString() }); }, now: () => date });
+  return { core, dispatches: () => dispatches, blockReads: () => blockReads, receiptVerifications: () => receiptVerifications, getOrderSandboxes: () => getOrderSandboxes, staleSignals: () => staleSignals, advance(minutes: number) { date = new Date(date.getTime() + minutes * 60_000); }, sent() { observation = "sent"; date = new Date("2026-09-12T00:00:10.000Z"); } };
 }
 
 describe("FundingCore", () => {
@@ -213,6 +214,10 @@ describe("FundingCore", () => {
     const received = await fixture.core.getOrder(session, created.id);
     expect(received.state).toBe("received");
     expect(received.instructions).toBeNull();
+    expect(fixture.staleSignals()).toEqual([{
+      address: session.smartAccount!.address,
+      at: "2026-09-12T00:00:10.000Z",
+    }]);
   });
 
   test("logs unmatched webhooks without raw bodies or provider order identifiers", async () => {

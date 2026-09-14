@@ -12,13 +12,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoneyTicker } from "@/components/money-ticker";
 import type { FetchActivity } from "@/client/activity";
-import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import { FundingActions } from "@/client/funding/funding-actions";
 import { SavingsTeaser } from "@/client/savings/savings-teaser";
 import { PresentationRegionProvider } from "@/client/invest/presentation-quote";
 import { TransferActions } from "@/client/transfers";
 import type { MoneyGroupPresentation } from "@/shared/balances/present";
 import type { TransferAssetAvailability } from "@/shared/transfers/types";
+import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import type { VerifiedAccountSession } from "@/shared/account/session-types";
 import type { RegionId } from "@/config/regions";
 import { ConnectedActivityPanel } from "./activity-panel";
@@ -52,7 +52,6 @@ function SectionHeader({
 
 export function HomePanel({
   assetBalances,
-  assetMarkResolution,
   activitySession,
   sendAvailability,
   fetchActivity,
@@ -67,9 +66,8 @@ export function HomePanel({
   regionId,
 }: {
   assetBalances?: HomeAssetBalancesPresentation;
-  assetMarkResolution?: AssetMarkResolution;
   activitySession: VerifiedAccountSession | null;
-  sendAvailability: readonly TransferAssetAvailability[];
+  sendAvailability: readonly (TransferAssetAvailability & { imageUrl?: string })[];
   fetchActivity: FetchActivity;
   fetchOperations: (signal?: AbortSignal) => Promise<unknown>;
   onOpenSave: () => void;
@@ -82,6 +80,13 @@ export function HomePanel({
   regionId: RegionId;
 }) {
   const isLoading = assetBalances?.status === "loading";
+  // Send's asset picker takes its marks from the same holdings the rows do (no Invest dependency).
+  const sendAssetMarkResolution: AssetMarkResolution = {
+    images: Object.fromEntries(
+      sendAvailability.map((asset) => [asset.assetKey, asset.imageUrl ?? null]),
+    ),
+    pending: false,
+  };
   const isRevalidating = assetBalances?.revalidating === true;
   const showSessionShimmer = !activitySession && (isLoading || isRevalidating);
   const heroLabel = isLoading
@@ -90,8 +95,7 @@ export function HomePanel({
       ? "Balance unavailable"
       : "Total balance";
   const moneyGroups = assetBalances?.groups ?? [];
-  const balanceStatusLabel =
-    assetBalances?.totalStatus === "partial" ? undefined : assetBalances?.statusLabel;
+  const balanceStatusLabel = assetBalances?.statusLabel;
   const showBalanceStatus =
     assetBalances?.status !== "loading" && Boolean(balanceStatusLabel);
 
@@ -150,7 +154,7 @@ export function HomePanel({
             initialOpen={initialSendFlow}
             initialActionId={initialSendActionId}
             availableAssets={sendAvailability}
-            assetMarkResolution={assetMarkResolution}
+            assetMarkResolution={sendAssetMarkResolution}
           />
         </PresentationRegionProvider>
       </div>
@@ -167,9 +171,9 @@ export function HomePanel({
           <CardContent className="px-2">
             <HomeMoneyGroups
               groups={moneyGroups}
+              hiddenRows={assetBalances?.hiddenRows}
               isLoading={isLoading}
               isUnavailable={assetBalances?.status === "unavailable"}
-              assetMarkResolution={assetMarkResolution}
               onOpenGroup={onOpenBalances}
             />
           </CardContent>

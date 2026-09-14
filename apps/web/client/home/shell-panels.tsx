@@ -5,7 +5,6 @@ import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { FetchActivity } from "@/client/activity";
 import { AccountSettings } from "@/client/account/account-settings";
-import type { AssetMarkResolution } from "@/client/asset-mark/presentation";
 import { PrimaryNavigation } from "@/components/primary-navigation";
 import {
   activityPanelId,
@@ -47,7 +46,10 @@ export function DashboardShell({
   signOut,
   paintedAssetBalances,
   sendAvailability,
-  assetMarkResolution,
+  showSmallBalances,
+  onShowSmallBalancesChange,
+  revealSmallBalances,
+  onRevealSmallBalancesChange,
   activitySession,
   fetchActivity,
   fetchOperations,
@@ -83,7 +85,10 @@ export function DashboardShell({
   signOut: () => void;
   paintedAssetBalances: HomeAssetBalancesPresentation;
   sendAvailability: readonly TransferAssetAvailability[];
-  assetMarkResolution?: AssetMarkResolution;
+  showSmallBalances: boolean;
+  onShowSmallBalancesChange: (value: boolean) => void;
+  revealSmallBalances: boolean;
+  onRevealSmallBalancesChange: (value: boolean) => void;
   activitySession: VerifiedAccountSession | null;
   fetchActivity: FetchActivity;
   fetchOperations: (signal?: AbortSignal) => Promise<unknown>;
@@ -126,6 +131,8 @@ export function DashboardShell({
               isPreferenceReady={isPreferenceReady}
               accountAddress={isVerified ? accountAddress : null}
               accountOwnerKey={isVerified ? accountOwnerKey : null}
+              showSmallBalances={showSmallBalances}
+              onShowSmallBalancesChange={onShowSmallBalancesChange}
               onSignOut={signOut}
             />
           </div>
@@ -154,7 +161,6 @@ export function DashboardShell({
                 <MountedShellPanel active={activeNavigation === "home"}>
                   <HomePanel
                     assetBalances={paintedAssetBalances}
-                    assetMarkResolution={assetMarkResolution}
                     activitySession={activitySession}
                     sendAvailability={sendAvailability}
                     fetchActivity={fetchActivity}
@@ -175,7 +181,9 @@ export function DashboardShell({
                   <BalancesPage
                     active={activeNavigation === balancesPanelId}
                     assetBalances={paintedAssetBalances}
-                    assetMarkResolution={assetMarkResolution}
+                    showSmallBalances={showSmallBalances}
+                    revealSmallBalances={revealSmallBalances}
+                    onRevealSmallBalancesChange={onRevealSmallBalancesChange}
                     isChecking={isChecking}
                     revealedCount={balancesReveal.count}
                     onRevealMore={balancesReveal.extend}

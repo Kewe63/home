@@ -8,6 +8,7 @@ import { decimalToAtomic } from "@/shared/formatting/atomic";
 import { createProviderContext } from "./provider-context";
 import { authenticateFundingQuote, isFundingQuoteExpired, signFundingQuote } from "./quote-token";
 import type { FundingOrder, FundingOrderOwner, FundingOrderStore } from "./store";
+import { awaitBalanceSignal } from "@/server/balances/signal";
 
 export type ReceiptMatch = { transactionHash: `0x${string}`; logIndex: number } | null;
 
@@ -20,6 +21,7 @@ export type FundingCoreDependencies = {
   currentBaseBlock: () => Promise<string>;
   verifyReceipt: (order: FundingOrder, hash: `0x${string}`) => Promise<ReceiptMatch>;
   logUnmatchedWebhook?: (event: { providerId: string; reason: "invalid" | "unmatched" }) => void;
+  markStale?: (address: `0x${string}`, at: Date) => Promise<void>;
   now?: () => Date;
 };
 
@@ -233,7 +235,21 @@ export class FundingCore {
     if (!updated) return await this.deps.store.getOwned(order.id, order.owner) ?? order;
     if (observation.transactionHash && !order.sandbox) {
       const evidence = await this.deps.verifyReceipt(updated, observation.transactionHash);
-      if (evidence) updated = await this.deps.store.claimReceipt(order.id, { ...evidence, expectedVersion: updated.version, updatedAt: this.now().toISOString() }) ?? updated;
+      if (evidence) {
+        const receivedAt = this.now();
+        const received = await this.deps.store.claimReceipt(order.id, {
+          ...evidence,
+          expectedVersion: updated.version,
+          updatedAt: receivedAt.toISOString(),
+        });
+        if (received) {
+          updated = received;
+          await awaitBalanceSignal(() => this.deps.markStale?.(
+            received.destination,
+            receivedAt,
+          ), { timeoutMs: 2_000 });
+        }
+      }
     }
     return updated;
   }

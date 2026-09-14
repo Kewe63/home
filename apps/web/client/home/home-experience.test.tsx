@@ -166,6 +166,8 @@ function HomeHarness({
             secondary: null,
             tone: "default",
           }],
+          hiddenRows: [],
+          hiddenCount: 0,
         }}
       />
     </AccountWalletSessionOwner>
