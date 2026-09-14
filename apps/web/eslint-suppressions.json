@@ -34,11 +34,6 @@
       "count": 4
     }
   },
-  "client/borrowing/borrowing-experience.tsx": {
-    "shadcn/no-restyle": {
-      "count": 4
-    }
-  },
   "client/funding/add-money-dialog.tsx": {
     "shadcn/no-restyle": {
       "count": 14
@@ -50,11 +45,6 @@
     }
   },
   "client/home/balances-panel.tsx": {
-    "shadcn/no-restyle": {
-      "count": 9
-    }
-  },
-  "client/home/home-panel.tsx": {
     "shadcn/no-restyle": {
       "count": 9
     }
