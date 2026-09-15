@@ -22,6 +22,16 @@ import {
 } from "@/client/query/after-action";
 import { dataOwnerKey } from "./owner-keys";
 
+/** Only fixed-endpoint GET transport failures, never authentication or payload failures. */
+export class RetryableAccountReadError extends Error {
+  constructor() {
+    super("Authenticated resource is unavailable.");
+    this.name = "RetryableAccountReadError";
+  }
+}
+
+const transientReadStatuses = new Set([408, 429, 500, 502, 503, 504]);
+
 type MoneyActionApiFetch = (path: string, init?: RequestInit) => Promise<unknown>;
 
 const accountResourcePrefixes = [
@@ -120,7 +130,10 @@ export function useAuthenticatedTransport({
       if (!session || status !== "verified" || verification !== "server" || !ownerKey) {
         throw new Error("Authenticated resource is unavailable.");
       }
+      const identity = ownerFence.capture();
+      const assertActive = () => ownerFence.assertCurrent(identity);
       const accessToken = await getAccessToken();
+      assertActive();
       if (authentication === "cdp" && !accessToken) {
         throw new Error("Authenticated resource is unavailable.");
       }
@@ -145,8 +158,10 @@ export function useAuthenticatedTransport({
         );
       } catch (error) {
         if (signal?.aborted) throw error;
-        throw new Error("Authenticated resource is unavailable.");
+        assertActive();
+        throw new RetryableAccountReadError();
       }
+      assertActive();
       if (!response.ok) {
         let details = { code: null as string | null, serverMessage: null as string | null };
         try {
@@ -154,8 +169,11 @@ export function useAuthenticatedTransport({
         } catch {
           // Fixed-endpoint callers only need the bounded status/code seam.
         }
+        assertActive();
         throwIfDeploymentExpired(response, skewHeaders, details.code);
-        const unavailable = new Error("Authenticated resource is unavailable.");
+        const unavailable = transientReadStatuses.has(response.status) && !signal?.aborted
+          ? new RetryableAccountReadError()
+          : new Error("Authenticated resource is unavailable.");
         Object.assign(unavailable, { status: response.status, ...details });
         throw unavailable;
       }
@@ -165,7 +183,7 @@ export function useAuthenticatedTransport({
         throw new Error("Authenticated resource is unavailable.");
       }
     },
-    [authentication, getAccessToken, ownerKey, session, sessionFetch, status, verification],
+    [authentication, getAccessToken, ownerFence, ownerKey, session, sessionFetch, status, verification],
   );
 
   const startActionBalanceFreshness = useCallback((actionId: string) => startBalanceFreshness({

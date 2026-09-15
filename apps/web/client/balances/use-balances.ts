@@ -1,8 +1,9 @@
 "use client";
 
 import { keepPreviousData } from "@tanstack/react-query";
+import { RetryableAccountReadError } from "@/client/account/cdp-authenticated-transport";
 import { dataOwnerKey } from "@/client/account/owner-keys";
-import { ownerQueryKey, ownerQueryMeta, useHomeQuery } from "@/client/query/query-client";
+import { browserHomeQueryClient, ownerQueryKey, ownerQueryMeta, useHomeQuery, useHomeQueryClient } from "@/client/query/query-client";
 import type { RegionId } from "@/config/regions";
 import { parseBalancesSnapshot } from "@/shared/balances/contract";
 import type {
@@ -24,6 +25,7 @@ export function useBalances(
 ): BalancesState & { revalidating?: true } {
   const validSession = isBalancesSession(session) ? session : null;
   const ownerKey = validSession ? dataOwnerKey(validSession) : null;
+  const queryClient = useHomeQueryClient(browserHomeQueryClient());
   const query = useHomeQuery<BalancesSnapshot>({
     queryKey: ownerKey
       ? ownerQueryKey(ownerKey, "balances", region)
@@ -34,18 +36,23 @@ export function useBalances(
     refetchOnWindowFocus: true,
     meta: ownerKey ? ownerQueryMeta(ownerKey, "owner") : undefined,
     placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[0] === ownerKey ? keepPreviousData(previousData) : undefined,
-    queryFn: async ({ signal }) => {
+      previousQuery?.queryKey[0] === ownerKey && previousQuery.queryKey[2] === region
+        ? keepPreviousData(previousData) : undefined,
+    queryFn: async ({ signal, queryKey }) => {
       if (!validSession) throw new Error("Balances are unavailable.");
-      return parseBalancesSnapshot(
-        await fetchBalances(region, signal),
-        {
-          subject: validSession.subject,
-          smartAccountAddress: validSession.smartAccountAddress,
-          chainId: 8453,
-        },
-        region,
-      );
+      let payload: unknown;
+      try {
+        payload = await fetchBalances(region, signal);
+      } catch (error) {
+        // Inspect before TanStack records this failure. A hard error or action
+        // invalidation must not resurrect an earlier successful observation.
+        const cached = queryClient.getQueryState<BalancesSnapshot>(queryKey);
+        if (!(error instanceof RetryableAccountReadError) || signal.aborted ||
+          cached?.status !== "success" || cached.isInvalidated) throw error;
+        return { ...parseBalancesSnapshot(cached.data, validSession, region), stale: true };
+      }
+      // Parsing failures are not transient transport failures.
+      return parseBalancesSnapshot(payload, validSession, region);
     },
   });
 

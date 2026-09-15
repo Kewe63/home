@@ -48,11 +48,23 @@ export function ownerQueryMeta(ownerKey: string, persistence: "memory" | "owner"
   return { persistence, ownerKey };
 }
 
+// A successful fallback delivery is not a new balance observation.
+export function queryObservationTime(query: Query): number {
+  const data = query.state.data;
+  if (query.queryKey[1] === "balances" && data && typeof data === "object" &&
+    "stale" in data && data.stale === true) {
+    const observedAt = "fetchedAt" in data && typeof data.fetchedAt === "string"
+      ? Date.parse(data.fetchedAt) : NaN;
+    return Number.isFinite(observedAt) ? Math.min(query.state.dataUpdatedAt, observedAt) : 0;
+  }
+  return query.state.dataUpdatedAt;
+}
+
 export function shouldPersistOwnerQuery(query: Query, ownerKey: string, now = Date.now()): boolean {
   const meta = query.meta as HomeQueryMeta | undefined;
   return isSafeQueryIdentity(ownerKey) && meta?.persistence === "owner" && meta.ownerKey === ownerKey &&
     query.queryKey[0] === ownerKey && query.state.status === "success" &&
-    now - query.state.dataUpdatedAt <= ownerQueryCacheTtlMs;
+    now - queryObservationTime(query) <= ownerQueryCacheTtlMs;
 }
 
 export function dehydrateOwnerQueries(
