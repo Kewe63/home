@@ -6,7 +6,7 @@ import {
   type BalanceSnapshot,
   type FreshUntilMovedClock,
 } from "./fresh-until-moved";
-import { ownerQueryKey, ownerQueryMeta } from "./query-client";
+import { ownerQueryKey, ownerQueryMeta, queryObservationTime } from "./query-client";
 import { parseBalancesSnapshot } from "@/shared/balances/contract";
 import type { BalancesSnapshot } from "@/shared/balances/types";
 
@@ -119,7 +119,7 @@ export async function startBalanceFreshness(input: {
   // old. Merge oldest → newest so the freshest non-null balance wins and older
   // snapshots only fill gaps, otherwise a stale region reports a false move.
   const byFreshness = [...balanceQueries].sort(
-    (a, b) => a.state.dataUpdatedAt - b.state.dataUpdatedAt,
+    (a, b) => queryObservationTime(a) - queryObservationTime(b),
   );
   for (const q of byFreshness) {
     const data = q.state.data;

@@ -115,6 +115,14 @@ describe("balance freshness across cached regions", () => {
       ],
       expectedMoved: false,
     },
+    {
+      name: "a newly delivered fallback cannot outrank a newer observation",
+      regions: [
+        { id: "US", initial: "5", fresh: "10", updatedAt: 3_000, fetchedAt: new Date(1_000).toISOString() },
+        { id: "DE", initial: "10", fresh: "10", updatedAt: 2_000 },
+      ],
+      expectedMoved: false,
+    },
   ] as const;
 
   for (const scenario of cases) {
@@ -130,7 +138,8 @@ describe("balance freshness across cached regions", () => {
       for (const region of scenario.regions) {
         queryClient.setQueryData(
           ownerQueryKey(ownerKey, "balances", region.id),
-          balancesSnapshot(region.initial),
+          { ...balancesSnapshot(region.initial),
+            ...("fetchedAt" in region ? { stale: true, fetchedAt: region.fetchedAt } : {}) },
           "updatedAt" in region ? { updatedAt: region.updatedAt } : undefined,
         );
       }

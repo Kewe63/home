@@ -207,6 +207,12 @@ G1 moved CDP Token Balances and Coinbase FX into `server/balances/`; G2 removed 
 
 Actions remain registry-only until a separate product decision extends Send.
 
+## Background read failures
+
+After a verified observation, a same-owner, same-region background GET network failure or HTTP 408/429/500/502/503/504 retains that observation for presentation with `stale: true` and its original `fetchedAt`. Fallback is cached as a stale observation. Persistence TTL and action-baseline ordering use its original observation age, not its renewed query delivery timestamp. The existing presenter keeps the total and rows visible and shows their observation age; a subsequent successful read replaces the fallback. This does not add request retries.
+
+Initial failures, authentication failures, invalid JSON or snapshot scope, cancellation, and action-invalidated observations do not qualify. A hard failure blocks fallback until a successful read; a later transient failure cannot revive that rejected observation. Region changes never use another region's placeholder data.
+
 ## Constants
 
 | Constant | Value | Why |
